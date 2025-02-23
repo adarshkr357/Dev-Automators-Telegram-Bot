@@ -41,20 +41,5 @@ This project is a Telegram bot that allows users to convert files to different f
 - **Extensible Commands:** Community members can propose and add new commands.
 - **Open Source Collaboration:** Follow our contribution guidelines to enhance the bot!
 
----
-
-## **How to Get Started**
-
-### **1. Fork & Clone the Repository**
-
-To get started, fork [this](https://github.com/your-username/File-Converter-Bot) repository on GitHub and then clone it to your local system.
-
-#### **Fork the Repository:**
-Click the "Fork" button on this [repo](https://github.com/your-username/File-Converter-Bot) to create your own copy.
-
-#### **Clone Your Fork:**
-Open a terminal and run the following command:
-
-```bash
-git clone https://github.com/<your-username>/File-Converter-Bot.git
-cd File-Converter-Bot
+Happy contributing and happy coding! 🚀
+— Abhay Yadav
