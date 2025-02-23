@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-NGROK_URL = ""  # Paste your own ngrok link e.g., https://abcd.ngrok-free.app
+NGROK_URL = "https://6578-2409-40d0-118d-43d9-e871-ae68-53f-a8d7.ngrok-free.app"  
 BASE_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/"
 WEBHOOK_URL = f"{NGROK_URL}/webhook"
 
@@ -42,6 +42,8 @@ def webhook():
         if message.get("text", "").strip() == "/start":
             greeting = random.choice(greetings)
             send_message(chat_id, greeting)
+        elif message.get("text", "").strip() == "/help":
+            send_message(chat_id, "Here are the available commands:\n/start - Greet the user\n/help - Show available commands")
         else:
             send_message(chat_id, "Invalid message")
 
