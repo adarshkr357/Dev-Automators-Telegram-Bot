@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 BASE_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/"
-
+print(f"BOT_TOKEN: {BOT_TOKEN}") 
 greetings = [
     "Hello!",
     "Hi there!",
@@ -16,6 +16,11 @@ greetings = [
     "Salutations!",
     "Howdy!"
 ]
+moods=[ "😊 Happy: Because you’re here, and that’s all I need!",
+        "😔 Sad: Feeling a little down... but your message just made it better!",
+        "😠 Angry: Ugh! Someone tested my patience today. But you? You're my peace. 😌",
+        "🤩 Excited: Ahh! You’re here! U made my  day! 🎉"
+        ]
 
 def get_updates(offset=None):
     url = BASE_URL + "getUpdates"
@@ -121,9 +126,17 @@ def main():
                 """
                 joke = get_joke()
                 send_message(chat_id, joke)
+           
+            elif  text == "/mood":
+                """
+                Added by Disha - 27057
+                This will show up moods by random, sometimes happy, sad, angry and exicited in pickup lines sense.
+                """
+                mood = random.choice(moods)
+                send_message(chat_id, mood)
             else:
-                send_message(chat_id, "Invalid message")
-
+                send_message(chat_id, "Invalid command. Use /help for assistance.")
+            
         time.sleep(0.5)
 
 if __name__ == "__main__":
