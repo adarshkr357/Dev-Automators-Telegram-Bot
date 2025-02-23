@@ -1,14 +1,27 @@
+# Abhay yadav 27006
+# File cconverter bot
+# This bot can convert images to PNG format and extract text from PDF files.
+# It uses long polling to receive updates from Telegram and processes the received documents.   
+# For more information, please refer to the README.md file.
+
+
+
 import os
 import time
 import threading
 import random
 import requests
 from dotenv import load_dotenv
+from PIL import Image
+from PyPDF2 import PdfReader
+import io
 
+# Load environment variables from .env file
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 BASE_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/"
 
+# List of greeting messages
 greetings = [
     "Hello!",
     "Hi there!",
@@ -17,81 +30,44 @@ greetings = [
     "Howdy!"
 ]
 
+# Function to get updates from Telegram
 def get_updates(offset=None):
     url = BASE_URL + "getUpdates"
     params = {"timeout": 100, "offset": offset}
     response = requests.get(url, params=params).json()
     return response
 
-def send_message(chat_id, text, reply_to_message_id=None, disable_web_page_preview=True):
+# Function to send a message to a chat
+def send_message(chat_id, text):
     url = BASE_URL + "sendMessage"
-    data = {
-        "chat_id": chat_id,
-        "text": text,
-        "parse_mode": "HTML",
-        "disable_web_page_preview": disable_web_page_preview # Disables the preview by default
-    }
-    
-    if reply_to_message_id:
-        data["reply_to_message_id"] = reply_to_message_id  # Reply to user's message
-
+    data = {"chat_id": chat_id, "text": text}
     requests.post(url, data=data)
 
-def get_joke():
-    """
-    This function uses and API to fetch an joke from the joke API 
-    It basically provides us with a python dictionary that has keys like type, setup and punchline which contains specific string (or we can say the main content or joke)
-    This data will be called to show up the joke as I did in line 43 of code
-    """
-    joke_url = "https://official-joke-api.appspot.com/jokes/random"
-    response = requests.get(joke_url)
-    if response.status_code == 200:
-        joke_data = response.json()
-        return f"{joke_data['setup']}\n{joke_data['punchline']}"
-    return "Sorry, I couldn't fetch a joke at the moment."
+# Function to send a document to a chat
+def send_document(chat_id, document, filename):
+    url = BASE_URL + "sendDocument"
+    files = {"document": (filename, document)}
+    data = {"chat_id": chat_id}
+    requests.post(url, data=data, files=files)
 
-def get_github_profile(username):
-    """
-    Gets GitHub user details like profile link, public repos, 
-    and followers.Converts username to lowercase to avoid errors.
-    use = /github <username> - Get GitHub user details (profile, repos, followers) 
-    """
-    username= username.lower()
-    url = f"https://api.github.com/users/{username}"
-    response = requests.get(url)
-    if response.status_code == 200:
-        data = response.json()
-        return (
-            f"🏷 <b>GitHub Profile:</b> {data['login']}\n"
-            f"🔗 <a href=\"{data['html_url']}\">Profile Link</a>\n"
-            f"🏆 <b>Public Repos:</b> {data['public_repos']}\n"
-            f"👥 <b>Followers:</b> {data['followers']}"
-        )
-    else:
-        return "❌ GitHub user not found."
+# Function to convert an image to a different format
+def convert_image(file_path, output_format):
+    image = Image.open(file_path)
+    output = io.BytesIO()
+    image.save(output, format=output_format)
+    output.seek(0)
+    return output
 
-def get_github_repo(repo_path):
-    """
-    Gets GitHub repo details like stars, forks, and last updated date.
-    Converts repo path to lowercase to avoid errors.
-    use = /github repo <owner/repo> - Get GitHub repository details (stars, forks, last update)  
-    """
-    repo_path = repo_path.lower()
-    url = f"https://api.github.com/repos/{repo_path}"
-    response = requests.get(url)
+# Function to extract text from a PDF file
+def convert_pdf_to_text(file_path):
+    pdf_reader = PdfReader(file_path)
+    text = ""
+    for page_num in range(len(pdf_reader.pages)):
+        page = pdf_reader.pages[page_num]
+        text += page.extract_text()
+    return text
 
-    if response.status_code == 200:
-        data = response.json()
-        return (
-            f"📌 <b>Repository:</b> {data['name']}\n"
-            f"🔗 <a href=\"{data['html_url']}\">Repo Link</a>\n"
-            f"⭐ <b>Stars:</b> {data['stargazers_count']}\n"
-            f"🍴 <b>Forks:</b> {data['forks_count']}\n"
-            f"📅 <b>Last Updated:</b> {data['updated_at'][:10]}"
-        )
-    else:
-        return "❌ Repository not found."
-    
+# Main function to handle updates and process messages
 def main():
     update_id = None
     print("Bot started...")
@@ -100,45 +76,40 @@ def main():
         for update in updates.get("result", []):
             update_id = update["update_id"] + 1
             message = update.get("message")
-            if not message:
-                continue
-            message_id = message.get("message_id")
             chat_id = message.get("chat", {}).get("id", None)
             text = message.get("text", "").strip().lower()
-            
-            # Add your command in this block by using elif
+            document = message.get("document")
+
             if text == "/start":
+                # Send a random greeting message
                 greeting = random.choice(greetings)
-                send_message(chat_id, greeting, message_id)
+                send_message(chat_id, greeting)
+            elif document:
+                # Process the received document
+                file_id = document["file_id"]
+                file_info = requests.get(BASE_URL + f"getFile?file_id={file_id}").json()
+                file_path = file_info["result"]["file_path"]
+                file_url = f"https://api.telegram.org/file/bot{BOT_TOKEN}/{file_path}"
+                file_content = requests.get(file_url).content
 
-            elif text.startswith("/github"):
-                """
-                Gets GitHub user details like profile link, public repos, and followers.
-                Converts username to lowercase to avoid errors.
-                """
-                inpu = text.split()
-                if len(inpu) == 2:
-                    username = inpu[1]
-                    response = get_github_profile(username)
-                elif len(inpu) == 3 and inpu[1] == "repo" :
-                    repo_path = inpu[2]
-                    response = get_github_repo(repo_path)
+                if document["mime_type"].startswith("image/"):
+                    # Convert image to PNG format and send back
+                    output = convert_image(io.BytesIO(file_content), "PNG")
+                    send_document(chat_id, output, "converted_image.png")
+                elif document["mime_type"] == "application/pdf":
+                    # Extract text from PDF and send back
+                    text = convert_pdf_to_text(io.BytesIO(file_content))
+                    send_message(chat_id, text)
                 else:
-                    response = "ℹ️ Usage: `/github <username>` or `/github repo <username>/<repo>`"
-                send_message(chat_id, response, message_id)
-
-            elif text == "/joke":
-                """
-                This block checks if the command /joke is typed by the user while using the bot and helps us to send the joke (refer line 66)
-                """
-                joke = get_joke()
-                send_message(chat_id, joke, message_id)
-                
+                    # Unsupported file type
+                    send_message(chat_id, "Unsupported file type.")
             else:
-                send_message(chat_id, "Invalid message", message_id)
+                # No document received
+                send_message(chat_id, "Please send a file to convert.")
 
         time.sleep(0.5)
 
+# Start the bot in a separate thread
 if __name__ == "__main__":
     polling_thread = threading.Thread(target=main)
     polling_thread.start()
