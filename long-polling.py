@@ -184,34 +184,68 @@ if __name__ == "__main__":
     polling_thread.start()
 
 
-from telegram import Update
-from telegram.ext import Updater, CommandHandler, CallbackContext
+import os
+import requests
+from dotenv import load_dotenv
 
-TOKEN = "7522585476:AAFR1RG4Cs2Q5nvGxY1uw7wLvzkq_6GeL5U"
+load_dotenv()
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+BASE_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/"
 
-KKR_MESSAGE = (
-    "🏆 CHAMPIONS AGAIN! 🏆\n"
-    "KKR reigns supreme in 2024, securing our third title! 💜🔥\n"
-    "The Knights have conquered, and the legacy continues! ⚡\n"
-    "#KKRChampions2024 #AmiKKR #ThreeTimeKings"
-)
+def send_message(chat_id, text, parse_mode="HTML"):
+    url = BASE_URL + "sendMessage"
+    data = {
+        "chat_id": chat_id,
+        "text": text,
+        "parse_mode": parse_mode
+    }
+    requests.post(url, data=data)
 
-def start(update: Update, context: CallbackContext):
-    update.message.reply_text("Welcome! Type /kkr to see the champions' message!")
+import requests
 
-def kkr_champions(update: Update, context: CallbackContext):
-    update.message.reply_text(KKR_MESSAGE)
+def get_kkr_history():
+    """
+    Returns a brief history of Kolkata Knight Riders (KKR).
+    """
+    return (
+        "🏏 <b>History of Kolkata Knight Riders (KKR)</b>\n\n"
+        "📅 <b>Founded:</b> 2008\n"
+        "🎭 <b>Owners:</b> Red Chillies Entertainment & Mehta Group\n"
+        "🏟 <b>Home Ground:</b> Eden Gardens, Kolkata\n\n"
+        "📖 <b>Team Journey:</b>\n"
+        "🔹 KKR was one of the original franchises in the inaugural IPL season in 2008.\n"
+        "🔹 Initially known for their aggressive brand of cricket and star players like Sourav Ganguly & Brendon McCullum.\n"
+        "🔹 Won their first IPL title in 2012 under the captaincy of Gautam Gambhir.\n"
+        "🔹 Repeated the success in 2014 with a dominant performance throughout the season.\n"
+        "🔹 Became a strong and consistent team in IPL, producing match-winners like Sunil Narine & Andre Russell.\n"
+        "🔹 Secured their third IPL title in 2024, re-establishing themselves as one of the league’s top teams.\n\n"
+        "🏆 <b>IPL Titles:</b> 2012, 2014, 2024\n"
+        "📜 <b>Legacy:</b> KKR is known for its passionate fanbase, unique playing style, and never-give-up attitude!\n\n"
+        "🔗 <a href='https://www.kkr.in/'>Official Website</a>"
+    )
 
-def main():
-    updater = Updater(TOKEN, use_context=True)
-    dispatcher = updater.dispatcher
+def get_kkr_player_stats(player_name):
+    """
+    Fetches player statistics for a given KKR player.
+    """
+    player_name = player_name.lower().replace(" ", "-")
+    url = f"https://api.cricapi.com/v1/players?name={player_name}&apikey=YOUR_API_KEY"
+    
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        if data["status"] == "success" and "data" in data and len(data["data"]) > 0:
+            player = data["data"][0]
+            return (
+                f"📊 <b>Player Stats for {player['name']}</b>\n\n"
+                f"🏏 <b>Matches Played:</b> {player.get('matches', 'N/A')}\n"
+                f"⚡ <b>Runs Scored:</b> {player.get('runs', 'N/A')}\n"
+                f"🎯 <b>Wickets Taken:</b> {player.get('wickets', 'N/A')}\n"
+                f"🔗 <a href='{player.get('profile', '#')}'>More Details</a>"
+            )
+        else:
+            return "❌ Player not found in KKR database."
+    return "❌ Unable to fetch player statistics. Try again later!"
 
-    dispatcher.add_handler(CommandHandler("start", start))
-    dispatcher.add_handler(CommandHandler("kkr", kkr_champions))
 
-    print("Bot is running...")
-    updater.start_polling()  
-    updater.idle() 
 
-if __name__ == "__main__":
-    main()
