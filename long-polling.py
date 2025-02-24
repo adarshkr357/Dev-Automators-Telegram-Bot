@@ -123,6 +123,60 @@ def get_devians_details(roll_no):
     
     return "❌ Unable to fetch devians data. Try again later!"   
 
+
+
+
+
+
+
+import requests
+
+def get_kkr_history():
+    """
+    Returns a brief history of Kolkata Knight Riders (KKR).
+    """
+    return (
+        "🏏 <b>History of Kolkata Knight Riders (KKR)</b>\n\n"
+        "📅 <b>Founded:</b> 2008\n"
+        "🎭 <b>Owners:</b> Red Chillies Entertainment & Mehta Group\n"
+        "🏟 <b>Home Ground:</b> Eden Gardens, Kolkata\n\n"
+        "📖 <b>Team Journey:</b>\n"
+        "🔹 KKR was one of the original franchises in the inaugural IPL season in 2008.\n"
+        "🔹 Initially known for their aggressive brand of cricket and star players like Sourav Ganguly & Brendon McCullum.\n"
+        "🔹 Won their first IPL title in 2012 under the captaincy of Gautam Gambhir.\n"
+        "🔹 Repeated the success in 2014 with a dominant performance throughout the season.\n"
+        "🔹 Became a strong and consistent team in IPL, producing match-winners like Sunil Narine & Andre Russell.\n"
+        "🔹 Secured their third IPL title in 2024, re-establishing themselves as one of the league’s top teams.\n\n"
+        "🏆 <b>IPL Titles:</b> 2012, 2014, 2024\n"
+        "📜 <b>Legacy:</b> KKR is known for its passionate fanbase, unique playing style, and never-give-up attitude!\n\n"
+        "🔗 <a href='https://www.kkr.in/'>Official Website</a>"
+    )
+
+def get_kkr_player_stats(player_name):
+    """
+    Fetches player statistics for a given KKR player.
+    """
+    player_name = player_name.lower().replace(" ", "-")
+    url = f"https://api.cricapi.com/v1/players?name={player_name}&apikey=YOUR_API_KEY"
+    
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        if data["status"] == "success" and "data" in data and len(data["data"]) > 0:
+            player = data["data"][0]
+            return (
+                f"📊 <b>Player Stats for {player['name']}</b>\n\n"
+                f"🏏 <b>Matches Played:</b> {player.get('matches', 'N/A')}\n"
+                f"⚡ <b>Runs Scored:</b> {player.get('runs', 'N/A')}\n"
+                f"🎯 <b>Wickets Taken:</b> {player.get('wickets', 'N/A')}\n"
+                f"🔗 <a href='{player.get('profile', '#')}'>More Details</a>"
+            )
+        else:
+            return "❌ Player not found in KKR database."
+    return "❌ Unable to fetch player statistics. Try again later!"
+
+
+
 def main():
     update_id = None
     print("Bot started...")
@@ -138,10 +192,23 @@ def main():
             text = message.get("text", "").strip().lower()
             
             # Add your command in this block by using elif
-            if text == "/start":
-                greeting = random.choice(greetings)
-                send_message(chat_id, greeting, message_id)
+            elif text == "/ipl":                                                 # for history of kkr by Akash Nandy
+           """
+           Sends KKR history when /ipl is used.
+           """
+           send_message(chat_id, get_kkr_history(), message_id)
+
+          elif text.startswith("/iplstats "):                              # for stats of kkr by Akash Nandy
+          """
+         Fetches and sends player stats when /iplstats <player_name> is used.
+         """
+         player_name = text.split("/iplstats ", 1)[1].strip()
+         send_message(chat_id, get_kkr_player_stats(player_name), message_id)
+
+
+                
             
+                
             elif text.startswith("/devian "):
                 """
                 Fetches student details from contributors.txt on GitHub using roll number.
@@ -200,52 +267,6 @@ def send_message(chat_id, text, parse_mode="HTML"):
         "parse_mode": parse_mode
     }
     requests.post(url, data=data)
-
-import requests
-
-def get_kkr_history():
-    """
-    Returns a brief history of Kolkata Knight Riders (KKR).
-    """
-    return (
-        "🏏 <b>History of Kolkata Knight Riders (KKR)</b>\n\n"
-        "📅 <b>Founded:</b> 2008\n"
-        "🎭 <b>Owners:</b> Red Chillies Entertainment & Mehta Group\n"
-        "🏟 <b>Home Ground:</b> Eden Gardens, Kolkata\n\n"
-        "📖 <b>Team Journey:</b>\n"
-        "🔹 KKR was one of the original franchises in the inaugural IPL season in 2008.\n"
-        "🔹 Initially known for their aggressive brand of cricket and star players like Sourav Ganguly & Brendon McCullum.\n"
-        "🔹 Won their first IPL title in 2012 under the captaincy of Gautam Gambhir.\n"
-        "🔹 Repeated the success in 2014 with a dominant performance throughout the season.\n"
-        "🔹 Became a strong and consistent team in IPL, producing match-winners like Sunil Narine & Andre Russell.\n"
-        "🔹 Secured their third IPL title in 2024, re-establishing themselves as one of the league’s top teams.\n\n"
-        "🏆 <b>IPL Titles:</b> 2012, 2014, 2024\n"
-        "📜 <b>Legacy:</b> KKR is known for its passionate fanbase, unique playing style, and never-give-up attitude!\n\n"
-        "🔗 <a href='https://www.kkr.in/'>Official Website</a>"
-    )
-
-def get_kkr_player_stats(player_name):
-    """
-    Fetches player statistics for a given KKR player.
-    """
-    player_name = player_name.lower().replace(" ", "-")
-    url = f"https://api.cricapi.com/v1/players?name={player_name}&apikey=YOUR_API_KEY"
-    
-    response = requests.get(url)
-    if response.status_code == 200:
-        data = response.json()
-        if data["status"] == "success" and "data" in data and len(data["data"]) > 0:
-            player = data["data"][0]
-            return (
-                f"📊 <b>Player Stats for {player['name']}</b>\n\n"
-                f"🏏 <b>Matches Played:</b> {player.get('matches', 'N/A')}\n"
-                f"⚡ <b>Runs Scored:</b> {player.get('runs', 'N/A')}\n"
-                f"🎯 <b>Wickets Taken:</b> {player.get('wickets', 'N/A')}\n"
-                f"🔗 <a href='{player.get('profile', '#')}'>More Details</a>"
-            )
-        else:
-            return "❌ Player not found in KKR database."
-    return "❌ Unable to fetch player statistics. Try again later!"
 
 
 
