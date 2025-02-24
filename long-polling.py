@@ -182,3 +182,36 @@ def main():
 if __name__ == "__main__":
     polling_thread = threading.Thread(target=main)
     polling_thread.start()
+
+
+from telegram import Update
+from telegram.ext import Updater, CommandHandler, CallbackContext
+
+TOKEN = "7522585476:AAFR1RG4Cs2Q5nvGxY1uw7wLvzkq_6GeL5U"
+
+KKR_MESSAGE = (
+    "🏆 CHAMPIONS AGAIN! 🏆\n"
+    "KKR reigns supreme in 2024, securing our third title! 💜🔥\n"
+    "The Knights have conquered, and the legacy continues! ⚡\n"
+    "#KKRChampions2024 #AmiKKR #ThreeTimeKings"
+)
+
+def start(update: Update, context: CallbackContext):
+    update.message.reply_text("Welcome! Type /kkr to see the champions' message!")
+
+def kkr_champions(update: Update, context: CallbackContext):
+    update.message.reply_text(KKR_MESSAGE)
+
+def main():
+    updater = Updater(TOKEN, use_context=True)
+    dispatcher = updater.dispatcher
+
+    dispatcher.add_handler(CommandHandler("start", start))
+    dispatcher.add_handler(CommandHandler("kkr", kkr_champions))
+
+    print("Bot is running...")
+    updater.start_polling()  
+    updater.idle() 
+
+if __name__ == "__main__":
+    main()
