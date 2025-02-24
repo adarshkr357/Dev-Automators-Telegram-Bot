@@ -109,7 +109,6 @@ def main():
 
         time.sleep(0.5)
 
-# Start the bot in a separate thread
 if __name__ == "__main__":
     polling_thread = threading.Thread(target=main)
     polling_thread.start()
