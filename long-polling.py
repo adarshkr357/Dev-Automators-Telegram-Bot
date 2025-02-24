@@ -3,12 +3,12 @@ import time
 import threading
 import random
 import requests
+import pycountry #helps by converting full country names into their official country codes. as required by open Weather Api
 from dotenv import load_dotenv
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 BASE_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/"
-print(f"BOT_TOKEN: {BOT_TOKEN}") 
 greetings = [
     "Hello!",
     "Hi there!",
@@ -86,7 +86,32 @@ def get_github_repo(repo_path):
         )
     else:
         return "❌ Repository not found."
+# Added by Disha --> 27057 
+# This will return weather details of user-entered city and country like Temperature and Condition of weather
+
+user_states = {}  # Dictionary to store users waiting for city input
+
+def get_country_code(country_name):
+    """Convert full country name to country code (e.g., 'India' -> 'IN')."""
+    country = pycountry.countries.get(name=country_name.title())  # Capitalization of country code 
+    return country.alpha_2 if country else None  # Return country code if found, else None
+
+def get_weather(city, country):
+    """Fetch weather details using OpenWeather API."""
+    api_key = os.getenv("Open_Weather_Api")
+    country_code = get_country_code(country)
+    if not country_code:
+        return "❌ Invalid country name! Please enter a valid country (e.g., 'India')."
+    weather_url = f"http://api.openweathermap.org/data/2.5/weather?q={city},{country_code}&appid={api_key}&units=metric"
+    response = requests.get(weather_url)
     
+    if response.status_code == 200:
+        weather_data = response.json()
+        temp = weather_data["main"]["temp"]
+        desc = weather_data["weather"][0]["description"].capitalize()
+        return f"🌤 Weather in {city}, {country_code}:\n🌡 Temperature: {temp}°C\n☁ Condition: {desc}"
+    return "Error: Unable to get weather update!"
+
 def main():
     update_id = None
     print("Bot started...")
@@ -126,14 +151,28 @@ def main():
                 """
                 joke = get_joke()
                 send_message(chat_id, joke)
-           
-            elif  text == "/mood":
                 """
                 Added by Disha - 27057
-                This will show up moods by random, sometimes happy, sad, angry and exicited in pickup lines sense.
-                """
+                1)This will show up moods by random, sometimes happy, sad, angry and exicited in pickup lines sense.
+                2)This will retrieves real-time weather data for a given city and country, typically using an API like 
+                OpenWeatherMap, and returns the formatted weather details.
+                """           
+            elif  text == "/mood":
                 mood = random.choice(moods)
                 send_message(chat_id, mood)
+            elif text == "/weather":
+                """Handle weather command: prompt user for city and country."""
+                user_states[chat_id] = "awaiting_location"
+                send_message(chat_id, "🌍 Please enter the city and country (e.g., Delhi, India):")
+            elif chat_id in user_states and user_states[chat_id] == "awaiting_location":
+                """Process user input after weather command."""
+                try:
+                    city, country = map(str.strip, text.split(","))
+                    weather = get_weather(city, country)
+                    send_message(chat_id, weather)
+                except ValueError:
+                    send_message(chat_id, "❌ Invalid format! Please enter as: City, Country (e.g., Delhi, India)")
+                del user_states[chat_id]  # Remove user from awaiting state
             else:
                 send_message(chat_id, "Invalid command. Use /help for assistance.")
             
