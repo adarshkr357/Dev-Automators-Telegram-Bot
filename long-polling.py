@@ -37,6 +37,30 @@ def send_message(chat_id, text, reply_to_message_id=None, disable_web_page_previ
 
     requests.post(url, data=data)
 
+def get_hackathons(city=None, state=None, min_prize=None, mode=None):
+    url = "https://devpost.com/api/hackathons"  # Using Devpost API
+    params = {}
+    if city:
+        params["city"] = city
+    if state:
+        params["state"] = state
+    if min_prize:
+        params["min_prize"] = min_prize
+    if mode:
+        params["mode"] = mode
+    response = requests.get(url, params=params)
+    if response.status_code == 200:
+        return response.json()
+    return []
+
+def format_hackathon(hackathon):
+    return (f"🏆 <b>{hackathon['name']}</b>\n"
+            f"📍 <b>Location:</b> {hackathon['city']}, {hackathon['state']}\n"
+            f"📅 <b>Date:</b> {hackathon['date']}\n"
+            f"💰 <b>Prize Money:</b> ${hackathon['prize_money']}\n"
+            f"🌍 <b>Mode:</b> {hackathon['mode']}\n"
+            f"🔗 <a href='{hackathon['link']}'>More Info</a>")
+
 def get_joke():
     """
     This function uses and API to fetch an joke from the joke API 
@@ -150,6 +174,29 @@ def main():
                 roll_no = text.split(" ", 1)[1]
                 devians_info = get_devians_details(roll_no)
                 send_message(chat_id, devians_info, message_id)
+
+            elif text.startswith("/hackathon"):
+                '''
+                Added by AkshitBhandariCodes - 27016
+                Get Updates About Hackathons around your City or Location
+                Used DevPost API to fetch updates about Upcoming and Ongoing Hackathons
+                '''
+                inpu = text.split()
+                if len(inpu) == 1:
+                    hackathons = get_hackathons()
+                    response = "\n\n".join(format_hackathon(h) for h in hackathons[:5])
+                elif len(inpu) == 3:
+                    if inpu[1] == "prize":
+                        response = "\n\n".join(format_hackathon(h) for h in get_hackathons(min_prize=int(inpu[2]))[:5])
+                    elif inpu[1] == "mode":
+                        response = "\n\n".join(format_hackathon(h) for h in get_hackathons(mode=inpu[2])[:5])
+                    else:
+                        city, state = inpu[1], inpu[2]
+                        hackathons = get_hackathons(city=city, state=state)
+                        response = "\n\n".join(format_hackathon(h) for h in hackathons[:5]) if hackathons else "No hackathons found in this location."
+                else:
+                    response = "ℹ️ Usage: `/hackathon`, `/hackathon prize <min_prize>`, `/hackathon mode <online/offline>`, `/hackathon <city> <state>`"
+                send_message(chat_id, response, message_id)
 
             elif text.startswith("/github"):
                 """
