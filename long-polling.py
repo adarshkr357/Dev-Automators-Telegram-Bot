@@ -37,6 +37,30 @@ def send_message(chat_id, text, reply_to_message_id=None, disable_web_page_previ
 
     requests.post(url, data=data)
 
+def get_hackathons(location):
+    """
+    Fetches upcoming hackathons based on the user's location.
+    Used DevPost for this one 
+    A very important thing for an developer is to participate in events and learn and this command could fix that
+    """
+    hackathon_url = f"https://devpost.com/api/hackathons?query={location}&status=upcoming"
+    response = requests.get(hackathon_url)
+    
+    if response.status_code == 200:
+        data = response.json()
+        hackathons = data.get("hackathons", [])
+        
+        if not hackathons:
+            return "No upcoming hackathons found near your location."
+        
+        hackathon_list = "<b>Upcoming Hackathons:</b>\n"
+        for hack in hackathons[:5]:
+            hackathon_list += f"\n🎯 <b>{hack['title']}</b>\n📅 Date: {hack['start_date']}\n📍 Location: {hack['location']}\n🔗 <a href='{hack['url']}'>More Info</a>\n"
+        
+        return hackathon_list
+    
+    return "Sorry, couldn't fetch hackathon details at the moment."
+
 def get_joke():
     """
     This function uses and API to fetch an joke from the joke API 
@@ -165,6 +189,19 @@ def main():
                     response = get_github_repo(repo_path)
                 else:
                     response = "ℹ️ Usage: `/github <username>` or `/github repo <username>/<repo>`"
+                send_message(chat_id, response, message_id)
+
+            elif text.startswith("/hackathons"):
+                """
+                Fetches hackathons based on user location.
+                Usage: /hackathons <city/country>
+                """
+                inpu = text.split()
+                if len(inpu) == 2:
+                    location = inpu[1]
+                    response = get_hackathons(location)
+                else:
+                    response = "ℹ️ Usage: `/hackathons <location>`"
                 send_message(chat_id, response, message_id)
 
             elif text == "/joke":
