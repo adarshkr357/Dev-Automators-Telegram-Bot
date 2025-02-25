@@ -4,6 +4,7 @@ import threading
 import random
 import requests
 from dotenv import load_dotenv
+from bs4 import BeautifulSoup
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -37,29 +38,35 @@ def send_message(chat_id, text, reply_to_message_id=None, disable_web_page_previ
 
     requests.post(url, data=data)
 
-def get_hackathons(location):
+
+from bs4 import BeautifulSoup
+
+def get_hackathons():
     """
-    Fetches upcoming hackathons based on the user's location.
-    Used DevPost for this one 
-    A very important thing for an developer is to participate in events and learn and this command could fix that
+    Lists upcoming hackathons from Devpost.
     """
-    hackathon_url = f"https://devpost.com/api/hackathons?query={location}&status=upcoming"
-    response = requests.get(hackathon_url)
+    url = "https://devpost.com/hackathons"
+    response = requests.get(url)
     
-    if response.status_code == 200:
-        data = response.json()
-        hackathons = data.get("hackathons", [])
-        
-        if not hackathons:
-            return "No upcoming hackathons found near your location."
-        
-        hackathon_list = "<b>Upcoming Hackathons:</b>\n"
-        for hack in hackathons[:5]:
-            hackathon_list += f"\n🎯 <b>{hack['title']}</b>\n📅 Date: {hack['start_date']}\n📍 Location: {hack['location']}\n🔗 <a href='{hack['url']}'>More Info</a>\n"
-        
-        return hackathon_list
-    
-    return "Sorry, couldn't fetch hackathon details at the moment."
+    if response.status_code != 200:
+        return "❌ Sorry, couldn't fetch hackathon details at the moment."
+
+    soup = BeautifulSoup(response.text, "html.parser")
+    hackathons = soup.find_all("div", class_="challenge-listing")[:5]  
+
+    if not hackathons:
+        return "No upcoming hackathons found."
+
+    hackathon_list = "<b>Upcoming Hackathons:</b>\n"
+    for hack in hackathons:
+        title = hack.find("h2").text.strip()
+        date = hack.find("p", class_="challenge-listing__dates").text.strip() if hack.find("p", class_="challenge-listing__dates") else "Date not available"
+        link = hack.find("a")["href"]
+
+        hackathon_list += f"\n🎯 <b>{title}</b>\n📅 {date}\n🔗 <a href='https://devpost.com{link}'>More Info</a>\n"
+
+    return hackathon_list
+
 
 def get_joke():
     """
@@ -191,18 +198,13 @@ def main():
                     response = "ℹ️ Usage: `/github <username>` or `/github repo <username>/<repo>`"
                 send_message(chat_id, response, message_id)
 
-            elif text.startswith("/hackathons"):
-                """
-                Fetches hackathons based on user location.
-                Usage: /hackathons <city/country>
-                """
-                inpu = text.split()
-                if len(inpu) == 2:
-                    location = inpu[1]
-                    response = get_hackathons(location)
-                else:
-                    response = "ℹ️ Usage: `/hackathons <location>`"
-                send_message(chat_id, response, message_id)
+            elif text == "/hackathons":
+                    """
+                    Fetches upcoming hackathons from Devpost.
+                    Usage: /hackathons
+                     """
+                    response = get_hackathons()
+                    send_message(chat_id, response, message_id)
 
             elif text == "/joke":
                 """
