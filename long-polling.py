@@ -3,6 +3,7 @@ import time
 import threading
 import random
 import requests
+import telebot
 from dotenv import load_dotenv
 from PIL import Image
 import io
@@ -260,23 +261,57 @@ def convert_pdf_to_text(file_path):
         text += page.extract_text()
     return text
 
-# Sample list of songs (You can add more)
-songs = [
-    "🎵 Bohemian Rhapsody - Queen",
-    "🎵 Shape of You - Ed Sheeran",
-    "🎵 Smells Like Teen Spirit - Nirvana",
-    "🎵 Blinding Lights - The Weeknd",
-    "🎵 Stairway to Heaven - Led Zeppelin",
-    "🎵 Imagine - John Lennon",
-    "🎵 Rolling in the Deep - Adele",
-    "🎵 Bad Guy - Billie Eilish",
-    "🎵 Thunderstruck - AC/DC",
-    "🎵 Believer - Imagine Dragons"
-]
+# # Sample list of songs (You can add more)
+# songs = [
+#     "🎵 Bohemian Rhapsody - Queen",
+#     "🎵 Shape of You - Ed Sheeran",
+#     "🎵 Smells Like Teen Spirit - Nirvana",
+#     "🎵 Blinding Lights - The Weeknd",
+#     "🎵 Stairway to Heaven - Led Zeppelin",
+#     "🎵 Imagine - John Lennon",
+#     "🎵 Rolling in the Deep - Adele",
+#     "🎵 Bad Guy - Billie Eilish",
+#     "🎵 Thunderstruck - AC/DC",
+#     "🎵 Believer - Imagine Dragons"
+# ]
 
-def get_random_song():
-    """Pick a random song from the list."""
-    return random.choice(songs)
+# def get_random_song():
+#     """Pick a random song from the list."""
+#     return random.choice(songs)
+
+
+
+TOKEN = "7260874493:AAHmQBPljRYOY_2h56sf1NpvYIeeZxozLFo"
+bot = telebot.TeleBot(TOKEN)
+
+def get_question():
+    url = "https://opentdb.com/api.php?amount=1&type=multiple"
+    data = requests.get(url).json()["results"][0]
+    q = data["question"]
+    options = data["incorrect_answers"] + [data["correct_answer"]]
+    return q, options, data["correct_answer"]
+
+@bot.message_handler(commands=["start"])
+def start(msg):
+    bot.send_message(msg.chat.id, "Welcome! Type /quiz to get a new question.")
+
+@bot.message_handler(commands=["quiz"])
+def quiz(msg):
+    q, options, answer = get_question()
+    text = f"Q: {q}\n\n" + "\n".join(f"{i+1}. {opt}" for i, opt in enumerate(options))
+    bot.send_message(msg.chat.id, text + "\n\nReply with the correct option number.")
+    bot.register_next_step_handler(msg, check_answer, options, answer)
+
+def check_answer(msg, options, answer):
+    try:
+        if options[int(msg.text) - 1] == answer:
+            bot.send_message(msg.chat.id, "✅ Correct!")
+        else:
+            bot.send_message(msg.chat.id, f"Wrong! The correct answer was: {answer}")
+    except:
+        bot.send_message(msg.chat.id, "Please enter a valid option number.")
+
+bot.polling()
 
 
 def main():
@@ -355,10 +390,6 @@ def main():
                 """
                 help_message = get_help_message()
                 send_message(chat_id, help_message, message_id)
-
-            elif text =="/song":
-                song = get_random_song()
-                send_message(chat_id, f"Here's a song recommendation for you:\n{song}", message_id)
 
             elif document:
                 file_id = document["file_id"]
