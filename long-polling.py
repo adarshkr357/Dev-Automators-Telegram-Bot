@@ -20,6 +20,12 @@ if not NEWS_API_KEY:
 BASE_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/"
 NEWS_URL = f"https://newsapi.org/v2/top-headlines?country=us&apiKey={NEWS_API_KEY}"
 
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+if not BOT_TOKEN:
+    raise ValueError("BOT_TOKEN not found. Please set it in .env file.")
+
+BASE_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/"
+
 greetings = [
     "Hello!",
     "Hi there!",
@@ -32,6 +38,7 @@ def get_updates(offset=None):
     url = BASE_URL + "getUpdates"
     params = {"timeout": 100, "offset": offset}
     response = requests.get(url, params=params).json()
+    print(response)
     return response
 
 def get_news():
@@ -253,6 +260,25 @@ def convert_pdf_to_text(file_path):
         text += page.extract_text()
     return text
 
+# Sample list of songs (You can add more)
+songs = [
+    "🎵 Bohemian Rhapsody - Queen",
+    "🎵 Shape of You - Ed Sheeran",
+    "🎵 Smells Like Teen Spirit - Nirvana",
+    "🎵 Blinding Lights - The Weeknd",
+    "🎵 Stairway to Heaven - Led Zeppelin",
+    "🎵 Imagine - John Lennon",
+    "🎵 Rolling in the Deep - Adele",
+    "🎵 Bad Guy - Billie Eilish",
+    "🎵 Thunderstruck - AC/DC",
+    "🎵 Believer - Imagine Dragons"
+]
+
+def get_random_song():
+    """Pick a random song from the list."""
+    return random.choice(songs)
+
+
 def main():
     update_id = None
     print("Bot started...")
@@ -329,6 +355,10 @@ def main():
                 """
                 help_message = get_help_message()
                 send_message(chat_id, help_message, message_id)
+
+            elif text =="/song":
+                song = get_random_song()
+                send_message(chat_id, f"Here's a song recommendation for you:\n{song}", message_id)
 
             elif document:
                 file_id = document["file_id"]
