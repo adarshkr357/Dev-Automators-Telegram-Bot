@@ -4,9 +4,11 @@ import threading
 import random
 import requests
 from dotenv import load_dotenv
+import pycountry
 from PIL import Image
 import io
 from PyPDF2 import PdfReader
+import pycountry
 
 load_dotenv()
 
@@ -27,7 +29,11 @@ greetings = [
     "Salutations!",
     "Howdy!"
 ]
-
+moods=[ "😊 Happy: Because you’re here, and that’s all I need!",
+        "😔 Sad: Feeling a little down... but your message just made it better!",
+        "😠 Angry: Ugh! Someone tested my patience today. But you? You're my peace. 😌",
+        "🤩 Excited: Ahh! You’re here! U made my  day! 🎉"
+        ]
 def get_updates(offset=None):
     url = BASE_URL + "getUpdates"
     params = {"timeout": 100, "offset": offset}
@@ -252,6 +258,29 @@ def convert_pdf_to_text(file_path):
         page = pdf_reader.pages[page_num]
         text += page.extract_text()
     return text
+# Added by Disha --> 27057 
+# This will return weather details of user-entered city and country like Temperature and Condition of weather
+user_states = {}  # Dictionary to store users waiting for city input
+
+def get_country_code(country_name):# To get country code by country name 
+    """Convert full country name to country code (e.g., 'India' -> 'IN')."""
+    country = pycountry.countries.get(name=country_name.title()) 
+    return country.alpha_2 if country else None 
+# Fetch weather details when country code is provided 
+def get_weather(city, country):
+    api_key = os.getenv("Open_Weather_Api")
+    country_code = get_country_code(country)
+    if not country_code:
+        return "❌ Invalid country name! Please enter a valid country (e.g., 'India')."
+    weather_url = f"http://api.openweathermap.org/data/2.5/weather?q={city},{country_code}&appid={api_key}&units=metric"
+    response = requests.get(weather_url)
+    if response.status_code == 200:
+        weather_data = response.json()
+        temp = weather_data["main"]["temp"]
+        description = weather_data["weather"][0]["description"].capitalize()
+        return f"🌤 Weather in {city}, {country_code}:\n🌡 Temperature: {temp}°C\n☁ Condition: {description}"
+    
+    return "Error: Unable to get weather update!"
 
 def main():
     update_id = None
@@ -346,7 +375,24 @@ def main():
                     send_message(chat_id, text, message_id)
                 else:
                     send_message(chat_id, "Unsupported file type.", message_id)
-                 
+#  Added by Disha - 27057
+# 1)This will show up moods by random, sometimes happy, sad, angry and exicited in pickup lines sense.
+#2)This will retrieves real-time weather data for a given city and country, typically using an API like 
+#OpenWeatherMap, and returns the formatted weather details.
+            elif  text == "/mood":
+                mood = random.choice(moods)
+                send_message(chat_id, mood)
+            elif text == "/weather":
+                user_states[chat_id] = "awaiting_location"
+                send_message(chat_id, "🌍 Please enter the city and country (e.g., Delhi, India):")
+            elif chat_id in user_states and user_states[chat_id] == "awaiting_location":
+                try:
+                    city, country = map(str.strip, text.split(","))
+                    weather = get_weather(city, country)
+                    send_message(chat_id, weather)
+                except ValueError:
+                    send_message(chat_id, "❌ Invalid format! Please enter as: City, Country (e.g., Delhi, India)")
+                del user_states[chat_id]  # Remove user from awaiting state     
             else:
                 send_message(chat_id, "Invalid message", message_id)
 
