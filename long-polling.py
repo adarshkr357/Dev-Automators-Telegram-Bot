@@ -77,10 +77,17 @@ def send_photo(chat_id, photo, reply_to_message_id=None, caption=None, disable_w
     
     requests.post(url, data=data)
 
-def send_document(chat_id, document, filename):
+def send_document(chat_id, document, filename, reply_to_message_id):
     url = BASE_URL + "sendDocument"
     files = {"document": (filename, document)}
-    data = {"chat_id": chat_id}
+    data = {
+        "chat_id": chat_id,
+        "parse_mode": "HTML"
+    }
+    
+    if reply_to_message_id:
+        data["reply_to_message_id"] = reply_to_message_id  # Reply to user's message
+
     requests.post(url, data=data, files=files)
 
 def get_joke():
@@ -217,7 +224,7 @@ def get_help_message():
     return (
         "📌 <b>Available Commands:</b>\n\n"
         "🔹 <b>/start</b> - Start the bot and receive a greeting\n"
-        "🔹 <b>/help</b> - Show this help message\n"
+        "🔹 <b>/help</b> - Display this help message\n"
         "🔹 <b>/news</b> - Get the latest news headlines\n"
         "🔹 <b>/joke</b> - Get a random joke\n"
         "🔹 <b>/cat</b> - Get a random cat image\n\n"
@@ -226,7 +233,8 @@ def get_help_message():
         "🔹 <b>/devian &lt;roll_no&gt;</b> - Get Devians details using roll number\n\n"
         "🔹 <b>/ipl</b> - Get history and details about Kolkata Knight Riders (KKR)\n"
         "🔹 <b>/iplstats &lt;player_name&gt;</b> - Get KKR player's statistics\n\n"
-        "ℹ️ <i>Type a command to get started!</i>"
+        "🔹 <b>Upload a File</b> - Send an image for format conversion or a PDF to extract text\n\n"
+        "ℹ️ <i>Type a command or send a file to get started!</i>"
     )
 
 # Function to convert an image to a different format
@@ -333,12 +341,12 @@ def main():
                 if document["mime_type"].startswith("image/"):
                     output_format = "PNG" if document["mime_type"] == "image/jpeg" else "JPEG"
                     converted_image = convert_image(io.BytesIO(file_content), output_format)
-                    send_document(chat_id, converted_image, f"converted_image.{output_format.lower()}")
+                    send_document(chat_id, converted_image, f"converted_image.{output_format.lower()}", message_id)
                 elif document["mime_type"] == "application/pdf":
                     text = convert_pdf_to_text(io.BytesIO(file_content))
-                    send_message(chat_id, text)
+                    send_message(chat_id, text, message_id)
                 else:
-                    send_message(chat_id, "Unsupported file type.")
+                    send_message(chat_id, "Unsupported file type.", message_id)
                  
             else:
                 send_message(chat_id, "Invalid message", message_id)
