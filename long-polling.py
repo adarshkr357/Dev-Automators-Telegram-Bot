@@ -5,6 +5,7 @@ import random
 import requests
 from datetime import datetime
 from dotenv import load_dotenv
+import pycountry
 from PIL import Image
 import io
 from PyPDF2 import PdfReader
