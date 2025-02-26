@@ -1,5 +1,5 @@
 Flask
 requests
 python-dotenv
-Pillow 
+Pillow
 PyPDF2

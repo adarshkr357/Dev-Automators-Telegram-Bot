@@ -3,7 +3,6 @@ import time
 import threading
 import random
 import requests
-from datetime import datetime
 from dotenv import load_dotenv
 import pycountry
 from PIL import Image
