@@ -91,11 +91,47 @@ def get_github_repo(repo_path):
         )
     else:
         return "❌ Repository not found."
+
+# A list of sample quotes categorized by mood
+quotes = {
+    "inspiration": [
+        "The only way to do great work is to love what you do. – Steve Jobs",
+        "It always seems impossible until it's done. – Nelson Mandela",
+        "Believe you can and you're halfway there. – Theodore Roosevelt"
+    ],
+    "love": [
+        "Love is composed of a single soul inhabiting two bodies. – Aristotle",
+        "You know you're in love when you can't fall asleep because reality is finally better than your dreams. – Dr. Seuss",
+        "Love all, trust a few, do wrong to none. – William Shakespeare"
+    ],
+    "life": [
+        "In the end, we only regret the chances we didn’t take. – Lewis Carroll",
+        "Life is what happens when you're busy making other plans. – John Lennon",
+        "Live as if you were to die tomorrow. Learn as if you were to live forever. – Mahatma Gandhi"
+    ],
+    "funny": [
+        "I am on a seafood diet. I see food and I eat it. – Anonymous",
+        "Why don’t skeletons fight each other? They don’t have the guts. – Anonymous",
+        "I told my wife she was drawing her eyebrows too high. She looked surprised. – Anonymous"
+    ]
+}    
+# server fetching a random quote based on the mood
+def suggest_quote(mood):
+    print(f"Server is looking for a {mood} quote...")
+    time.sleep(random.randint(1, 3))  # Simulate delay in fetching a quote
+
+    # Fetch a random quote based on the mood category
+    if mood in quotes:
+        return random.choice(quotes[mood])
+    else:
+        return "Sorry, no quotes available for this mood. Try something else!"
+
     
 def main():
     update_id = None
     print("Bot started...")
     while True:
+        #get new updates from telegram bot
         updates = get_updates(offset=update_id)
         for update in updates.get("result", []):
             update_id = update["update_id"] + 1
@@ -133,7 +169,12 @@ def main():
                 """
                 joke = get_joke()
                 send_message(chat_id, joke, message_id)
-                
+            elif text.startswith("/quote"):
+                mood= text.replace("/quote" , "").strip()
+                # get the mood
+                if mood:
+                    quote=suggest_quote(mood)
+                    send_message(chat_id,quote,message_id)
             else:
                 send_message(chat_id, "Invalid message", message_id)
 
