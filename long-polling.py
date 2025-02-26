@@ -1,68 +1,103 @@
+# Built-in modules
 import os
 import time
 import threading
 import random
+import io
+
+# Third-party modules
 import requests
 from dotenv import load_dotenv
 import pycountry
 from PIL import Image
-import io
 from PyPDF2 import PdfReader
-import pycountry
 
 load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 if not BOT_TOKEN:
     raise ValueError("BOT_TOKEN not found. Please set it in .env file.")
+
 NEWS_API_KEY = os.getenv("NEWS_API_KEY")  # Get from https://newsapi.org/register
 if not NEWS_API_KEY:
     print("NEWS_API_KEY not found. Please set it in .env file.")
 
+"""
+Follow these steps to get your API key:
+
+1️⃣ Go to https://home.openweathermap.org/users/sign_up and sign up.
+2️⃣ Log in to your account.
+3️⃣ Navigate to the "API keys" section.
+4️⃣ Click on "Generate a new key" and give it a name.
+5️⃣ Copy the generated API key and use it.
+
+🔹 Note: It may take a few hours for the API key to activate.
+🔹 Free-tier API has rate limits, so use it wisely!
+"""
+OPEN_WEATHER_KEY = os.getenv("OPEN_WEATHER_KEY")
+if not OPEN_WEATHER_KEY:
+    print("OPEN_WEATHER_KEY not found. Please set it in .env file.")
+
 BASE_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/"
 NEWS_URL = f"https://newsapi.org/v2/top-headlines?country=us&apiKey={NEWS_API_KEY}"
 
-greetings = [
-    "Hello!",
-    "Hi there!",
-    "Greetings!",
-    "Salutations!",
-    "Howdy!"
+greetings = ["Hello!", "Hi there!", "Greetings!", "Salutations!", "Howdy!"]
+
+moods = [
+    "😊 Happy: Because you're here, and that's all I need!",
+    "😔 Sad: Feeling a little down... but your message just made it better!",
+    "😠 Angry: Ugh! Someone tested my patience today. But you? You're my peace. 😌",
+    "🤩 Excited: Ahh! You're here! U made my  day! 🎉",
 ]
-moods=[ "😊 Happy: Because you’re here, and that’s all I need!",
-        "😔 Sad: Feeling a little down... but your message just made it better!",
-        "😠 Angry: Ugh! Someone tested my patience today. But you? You're my peace. 😌",
-        "🤩 Excited: Ahh! You’re here! U made my  day! 🎉"
-        ]
+
+
 def get_updates(offset=None):
     url = BASE_URL + "getUpdates"
     params = {"timeout": 100, "offset": offset}
     response = requests.get(url, params=params).json()
     return response
 
+
 def get_news():
-    params = {"apikey": NEWS_API_KEY, "country": "us", "category": "general", "pageSize": 5}
+    params = {
+        "apikey": NEWS_API_KEY,
+        "country": "us",
+        "category": "general",
+        "pageSize": 5,
+    }
     response = requests.get(NEWS_URL, params=params)
     news_data = response.json()
     articles = news_data.get("articles", [])
-    news_list = [f"{article['title']} - {article['source']['name']}" for article in articles]
+    news_list = [
+        f"{article['title']} - {article['source']['name']}" for article in articles
+    ]
     return "\n".join(news_list)
 
-def send_message(chat_id, text, reply_to_message_id=None, disable_web_page_preview=True):
+
+def send_message(
+    chat_id, text, reply_to_message_id=None, disable_web_page_preview=True
+):
     url = BASE_URL + "sendMessage"
     data = {
         "chat_id": chat_id,
         "text": text,
         "parse_mode": "HTML",
-        "disable_web_page_preview": disable_web_page_preview  # Disables the preview by default
+        "disable_web_page_preview": disable_web_page_preview,  # Disables the preview by default
     }
-    
+
     if reply_to_message_id:
         data["reply_to_message_id"] = reply_to_message_id  # Reply to user's message
 
     requests.post(url, data=data)
 
-def send_photo(chat_id, photo, reply_to_message_id=None, caption=None, disable_web_page_preview=True):
+
+def send_photo(
+    chat_id,
+    photo,
+    reply_to_message_id=None,
+    caption=None,
+    disable_web_page_preview=True,
+):
     """
     Added this in order to convert URL into an image
     """
@@ -71,33 +106,32 @@ def send_photo(chat_id, photo, reply_to_message_id=None, caption=None, disable_w
         "chat_id": chat_id,
         "photo": photo,
         "parse_mode": "HTML",
-        "disable_web_page_preview": disable_web_page_preview  # Disables the preview by default
+        "disable_web_page_preview": disable_web_page_preview,  # Disables the preview by default
     }
-    
+
     if reply_to_message_id:
         data["reply_to_message_id"] = reply_to_message_id  # Reply to user's message
-        
+
     if caption:
         data["caption"] = caption
-    
+
     requests.post(url, data=data)
+
 
 def send_document(chat_id, document, filename, reply_to_message_id):
     url = BASE_URL + "sendDocument"
     files = {"document": (filename, document)}
-    data = {
-        "chat_id": chat_id,
-        "parse_mode": "HTML"
-    }
-    
+    data = {"chat_id": chat_id, "parse_mode": "HTML"}
+
     if reply_to_message_id:
         data["reply_to_message_id"] = reply_to_message_id  # Reply to user's message
 
     requests.post(url, data=data, files=files)
 
+
 def get_joke():
     """
-    This function uses and API to fetch an joke from the joke API 
+    This function uses and API to fetch an joke from the joke API
     It basically provides us with a python dictionary that has keys like type, setup and punchline which contains specific string (or we can say the main content or joke)
     This data will be called to show up the joke as I did in line 43 of code
     """
@@ -108,11 +142,12 @@ def get_joke():
         return f"{joke_data['setup']}\n{joke_data['punchline']}"
     return "Sorry, I couldn't fetch a joke at the moment."
 
+
 def get_github_profile(username):
     """
-    Gets GitHub user details like profile link, public repos, 
+    Gets GitHub user details like profile link, public repos,
     and followers.Converts username to lowercase to avoid errors.
-    use = /github <username> - Get GitHub user details (profile, repos, followers) 
+    use = /github <username> - Get GitHub user details (profile, repos, followers)
     """
     username = username.lower()
     url = f"https://api.github.com/users/{username}"
@@ -127,6 +162,7 @@ def get_github_profile(username):
         )
     else:
         return "❌ GitHub user not found."
+
 
 def get_github_repo(repo_path):
     """
@@ -149,6 +185,7 @@ def get_github_repo(repo_path):
     else:
         return "❌ Repository not found."
 
+
 def get_cat_image():
     """
     Gets a photo of a cat from the Cat API
@@ -160,36 +197,41 @@ def get_cat_image():
         return cat_data[0]["url"]
     return "Sorry, The cats are sleeping, try again later"
 
+
 def get_devians_details(roll_no):
     """
     Fetches student details from contributors.txt on GitHub using roll number.
     """
     file_url = "https://raw.githubusercontent.com/adarshkr357/DevInnovators-FirstOpenSourceCommit/main/contributors.txt"
-    
+
     response = requests.get(file_url)
-    
+
     if response.status_code == 200:
         lines = response.text.split("\n")
         devians = []
-        
+
         for line in lines:
             if f"Roll: {roll_no}" in line:
                 devians.append(line)
                 break
-        
+
         if devians:
-            devians_data = "\n".join(devians).replace(",","\n")\
-                                             .replace("Name:", "📝 Name:") \
-                                             .replace("Roll:", "🎓 Roll:") \
-                                             .replace("Branch:", "🏛 Branch:") \
-                                             .replace("Section:", "📚 Section:") \
-                                             .replace("Email:", "📩 Email:")
+            devians_data = (
+                "\n".join(devians)
+                .replace(",", "\n")
+                .replace("Name:", "📝 Name:")
+                .replace("Roll:", "🎓 Roll:")
+                .replace("Branch:", "🏛 Branch:")
+                .replace("Section:", "📚 Section:")
+                .replace("Email:", "📩 Email:")
+            )
 
             return f"📌 <b>Devians Details:</b>\n{devians_data}"
         else:
             return "❌ Devians not found!"
-    
+
     return "❌ Unable to fetch devians data. Try again later!"
+
 
 def get_kkr_history():
     return (
@@ -201,6 +243,7 @@ def get_kkr_history():
         "📜 <b>Legacy:</b> KKR is known for its passionate fanbase, unique playing style, and never-give-up attitude!\n\n"
         "🔗 <a href='https://www.kkr.in/'>Official Website</a>"
     )
+
 
 def get_kkr_player_stats(player_name):
     player_name = player_name.lower().replace(" ", "-")
@@ -222,6 +265,7 @@ def get_kkr_player_stats(player_name):
             return "❌ Player not found in KKR database."
     return "❌ Unable to fetch player statistics. Try again later!"
 
+
 def get_help_message():
     """
     Returns a help message listing all available commands and their usage.
@@ -242,6 +286,7 @@ def get_help_message():
         "ℹ️ <i>Type a command or send a file to get started!</i>"
     )
 
+
 # Function to convert an image to a different format
 def convert_image(file_path, output_format):
     image = Image.open(file_path)
@@ -249,6 +294,7 @@ def convert_image(file_path, output_format):
     image.save(output, format=output_format)
     output.seek(0)
     return output
+
 
 # Function to extract text from a PDF file
 def convert_pdf_to_text(file_path):
@@ -258,29 +304,32 @@ def convert_pdf_to_text(file_path):
         page = pdf_reader.pages[page_num]
         text += page.extract_text()
     return text
-# Added by Disha --> 27057 
-# This will return weather details of user-entered city and country like Temperature and Condition of weather
-user_states = {}  # Dictionary to store users waiting for city input
 
-def get_country_code(country_name):# To get country code by country name 
-    """Convert full country name to country code (e.g., 'India' -> 'IN')."""
-    country = pycountry.countries.get(name=country_name.title()) 
-    return country.alpha_2 if country else None 
-# Fetch weather details when country code is provided 
+
+# To get country code by country name
+def get_country_code(country_name):
+    """
+    Convert full country name to country code (e.g., 'India' -> 'IN').
+    """
+    country = pycountry.countries.get(name=country_name.title())
+    return country.alpha_2 if country else None
+
+
+# Fetch weather details when country code is provided
 def get_weather(city, country):
-    api_key = os.getenv("Open_Weather_Api")
     country_code = get_country_code(country)
     if not country_code:
         return "❌ Invalid country name! Please enter a valid country (e.g., 'India')."
-    weather_url = f"http://api.openweathermap.org/data/2.5/weather?q={city},{country_code}&appid={api_key}&units=metric"
+    weather_url = f"http://api.openweathermap.org/data/2.5/weather?q={city},{country_code}&appid={OPEN_WEATHER_KEY}&units=metric"
     response = requests.get(weather_url)
     if response.status_code == 200:
         weather_data = response.json()
         temp = weather_data["main"]["temp"]
         description = weather_data["weather"][0]["description"].capitalize()
-        return f"🌤 Weather in {city}, {country_code}:\n🌡 Temperature: {temp}°C\n☁ Condition: {description}"
-    
+        return f"🌤 Weather in {city.capitalize()}, {country.capitalize()}:\n🌡 Temperature: {temp}°C\n☁ Condition: {description}"
+
     return "Error: Unable to get weather update!"
+
 
 def main():
     update_id = None
@@ -296,12 +345,12 @@ def main():
             chat_id = message.get("chat", {}).get("id", None)
             text = message.get("text", "").strip().lower()
             document = message.get("document")
-            
+
             # Add your command in this block by using elif
             if text == "/start":
                 greeting = random.choice(greetings)
                 send_message(chat_id, greeting, message_id)
-            
+
             elif text.startswith("/devian "):
                 """
                 Fetches student details from contributors.txt on GitHub using roll number.
@@ -320,7 +369,7 @@ def main():
                 if len(inpu) == 2:
                     username = inpu[1]
                     response = get_github_profile(username)
-                elif len(inpu) == 3 and inpu[1] == "repo" :
+                elif len(inpu) == 3 and inpu[1] == "repo":
                     repo_path = inpu[2]
                     response = get_github_repo(repo_path)
                 else:
@@ -339,7 +388,12 @@ def main():
                 It will give a random cat image
                 """
                 cat_image_url = get_cat_image()
-                send_photo(chat_id, cat_image_url, message_id, caption="Here's a awe-some cat for you!")
+                send_photo(
+                    chat_id,
+                    cat_image_url,
+                    message_id,
+                    caption="Here's a awe-some cat for you!",
+                )
 
             elif text == "/ipl":
                 send_message(chat_id, get_kkr_history(), message_id)
@@ -367,36 +421,59 @@ def main():
                 file_content = requests.get(file_url).content
 
                 if document["mime_type"].startswith("image/"):
-                    output_format = "PNG" if document["mime_type"] == "image/jpeg" else "JPEG"
-                    converted_image = convert_image(io.BytesIO(file_content), output_format)
-                    send_document(chat_id, converted_image, f"converted_image.{output_format.lower()}", message_id)
+                    output_format = (
+                        "PNG" if document["mime_type"] == "image/jpeg" else "JPEG"
+                    )
+                    converted_image = convert_image(
+                        io.BytesIO(file_content), output_format
+                    )
+                    send_document(
+                        chat_id,
+                        converted_image,
+                        f"converted_image.{output_format.lower()}",
+                        message_id,
+                    )
                 elif document["mime_type"] == "application/pdf":
                     text = convert_pdf_to_text(io.BytesIO(file_content))
                     send_message(chat_id, text, message_id)
                 else:
                     send_message(chat_id, "Unsupported file type.", message_id)
-#  Added by Disha - 27057
-# 1)This will show up moods by random, sometimes happy, sad, angry and exicited in pickup lines sense.
-#2)This will retrieves real-time weather data for a given city and country, typically using an API like 
-#OpenWeatherMap, and returns the formatted weather details.
-            elif  text == "/mood":
+
+            elif text == "/mood":
                 mood = random.choice(moods)
-                send_message(chat_id, mood)
-            elif text == "/weather":
-                user_states[chat_id] = "awaiting_location"
-                send_message(chat_id, "🌍 Please enter the city and country (e.g., Delhi, India):")
-            elif chat_id in user_states and user_states[chat_id] == "awaiting_location":
-                try:
-                    city, country = map(str.strip, text.split(","))
-                    weather = get_weather(city, country)
-                    send_message(chat_id, weather)
-                except ValueError:
-                    send_message(chat_id, "❌ Invalid format! Please enter as: City, Country (e.g., Delhi, India)")
-                del user_states[chat_id]  # Remove user from awaiting state     
+                send_message(chat_id, mood, message_id)
+
+            elif text.startswith("/weather"):
+                """
+                Fetches weather details if the user provides a city and country.
+                Ensures correct input format and prevents errors.
+                """
+                inpu = text.split("/weather", 1)[-1].strip()
+
+                if not inpu:
+                    send_message(
+                        chat_id,
+                        "❌ Please enter the city and country in this format:\n<code>/weather Delhi, India</code>",
+                        message_id,
+                    )
+
+                else:
+                    try:
+                        city, country = map(str.strip, inpu.split(", ", 1))
+                        weather = get_weather(city, country)
+                        send_message(chat_id, weather, message_id)
+                    except ValueError:
+                        send_message(
+                            chat_id,
+                            "❌ Invalid format! Please enter as: <code>/weather City, Country</code>\nExample: <code>/weather Delhi, India</code>",
+                            message_id,
+                        )
+
             else:
                 send_message(chat_id, "Invalid message", message_id)
 
         time.sleep(0.5)
+
 
 if __name__ == "__main__":
     polling_thread = threading.Thread(target=main)
