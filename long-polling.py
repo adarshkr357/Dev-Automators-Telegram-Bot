@@ -339,6 +339,22 @@ def get_weather(city, country):
     return "Error: Unable to get weather update!"
 
 
+TOKEN = "7260874493:AAHmQBPljRYOY_2h56sf1NpvYIeeZxozLFo"
+URL = f"https://api.telegram.org/bot{TOKEN}/"
+
+greetings = ["Hello! Type /quiz to start.", "Welcome! Ready for a quiz? Type /quiz.", "Hi there! Use /quiz to begin."]
+
+user_answers = {}  # To store user responses
+
+
+def get_question():
+    url = "https://opentdb.com/api.php?amount=1&type=multiple"
+    data = requests.get(url).json()["results"][0]
+    q = data["question"]
+    options = data["incorrect_answers"] + [data["correct_answer"]]
+    random.shuffle(options)  # Shuffle options
+    return q, options, data["correct_answer"]
+
 def main():
     update_id = None
     print("Bot started...")
@@ -450,6 +466,27 @@ def main():
             elif text == "/mood":
                 mood = random.choice(moods)
                 send_message(chat_id, mood, message_id)
+
+             # Start Command
+            elif text == "/start":
+                greeting = random.choice(greetings)
+                send_message(chat_id, greeting)
+                # Quiz Command
+                if text == "/quiz":
+                    question, options, answer = get_question()
+                    quiz_text = f"Q: {question}\n\n" + "\n".join(f"{i+1}. {opt}" for i, opt in enumerate(options))
+                    send_message(chat_id, quiz_text + "\n\nReply with the correct option number.")
+                    user_answers[chat_id] = (options, answer)  # Store user's question and answer
+                # Checking Answer
+                elif chat_id in user_answers:
+                    options, correct_answer = user_answers[chat_id]
+                    try:
+                        if options[int(text) - 1] == correct_answer:
+                            send_message(chat_id, "✅ Correct!")
+                        else:
+                            send_message(chat_id, f"❌ Wrong! The correct answer was: {correct_answer}")
+                    except:
+                        send_message(chat_id, "Please enter a valid option number.")
 
             elif text.startswith("/weather"):
                 """
