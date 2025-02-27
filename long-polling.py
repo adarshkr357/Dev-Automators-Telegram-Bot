@@ -187,12 +187,7 @@ def main():
                 """
                 joke = get_joke()
                 send_message(chat_id, joke, message_id)
-            elif text.startswith("/quote"):
-                mood= text.replace("/quote" , "").strip()
-                # get the mood
-                if mood:
-                    quote=suggest_quote(mood)
-                    send_message(chat_id,quote,message_id)
+            
             else:
                 send_message(chat_id, "Invalid message", message_id)
 
