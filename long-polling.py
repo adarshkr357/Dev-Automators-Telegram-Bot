@@ -16,6 +16,11 @@ greetings = [
     "Salutations!",
     "Howdy!"
 ]
+users = set()
+
+# Interval for reminders (in seconds)
+REMINDER_INTERVAL = 3600  # 1 hour
+
 
 def get_updates(offset=None):
     url = BASE_URL + "getUpdates"
@@ -92,39 +97,52 @@ def get_github_repo(repo_path):
     else:
         return "❌ Repository not found."
 
-# A list of sample quotes categorized by mood
-quotes = {
-    "inspiration": [
-        "The only way to do great work is to love what you do. – Steve Jobs",
-        "It always seems impossible until it's done. – Nelson Mandela",
-        "Believe you can and you're halfway there. – Theodore Roosevelt"
-    ],
-    "love": [
-        "Love is composed of a single soul inhabiting two bodies. – Aristotle",
-        "You know you're in love when you can't fall asleep because reality is finally better than your dreams. – Dr. Seuss",
-        "Love all, trust a few, do wrong to none. – William Shakespeare"
-    ],
-    "life": [
-        "In the end, we only regret the chances we didn’t take. – Lewis Carroll",
-        "Life is what happens when you're busy making other plans. – John Lennon",
-        "Live as if you were to die tomorrow. Learn as if you were to live forever. – Mahatma Gandhi"
-    ],
-    "funny": [
-        "I am on a seafood diet. I see food and I eat it. – Anonymous",
-        "Why don’t skeletons fight each other? They don’t have the guts. – Anonymous",
-        "I told my wife she was drawing her eyebrows too high. She looked surprised. – Anonymous"
-    ]
-}    
-# server fetching a random quote based on the mood
-def suggest_quote(mood):
-    print(f"Server is looking for a {mood} quote...")
-    time.sleep(random.randint(1, 3))  # Simulate delay in fetching a quote
 
-    # Fetch a random quote based on the mood category
-    if mood in quotes:
-        return random.choice(quotes[mood])
-    else:
-        return "Sorry, no quotes available for this mood. Try something else!"
+def handle_updates():
+    offset = None
+    while True:
+        updates = get_updates(offset)
+        if updates:
+            for update in updates:
+                # Update offset to avoid processing the same message multiple times
+                offset = update['update_id'] + 1
+                chat_id = update['message']['chat']['id']
+                text = update['message']['text']
+
+                # /start command: subscribe user to reminders
+                if text == "/start":
+                    users.add(chat_id)
+                    send_message(chat_id, "You have subscribed to periodic reminders!")
+
+                # /stop command: unsubscribe user from reminders
+                elif text == "/stop":
+                    if chat_id in users:
+                        users.remove(chat_id)
+                        send_message(chat_id, "You have unsubscribed from periodic reminders.")
+                    else:
+                        send_message(chat_id, "You were not subscribed to periodic reminders.")
+
+# Function to send periodic reminders
+def send_periodic_reminder():
+    while True:
+        for user in users:
+            send_message(user, "This is your periodic reminder!")
+        time.sleep(REMINDER_INTERVAL)
+
+# Function to start the bot
+def start_bot():
+    # Start the long polling thread
+    threading.Thread(target=handle_updates, daemon=True).start()
+
+   
+    threading.Thread(target=send_periodic_reminder, daemon=True).start()
+
+   
+    while True:
+        time.sleep(10)
+
+
+
 
     
 def main():
@@ -183,3 +201,4 @@ def main():
 if __name__ == "__main__":
     polling_thread = threading.Thread(target=main)
     polling_thread.start()
+     start_bot()
