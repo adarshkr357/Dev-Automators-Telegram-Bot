@@ -123,6 +123,24 @@ def get_devians_details(roll_no):
     
     return "❌ Unable to fetch devians data. Try again later!"   
 
+def get_crypto_price(symbol):
+    """
+    Fetches the current price of a cryptocurrency using the CoinGecko API.
+    Use: /crypto <symbol> (e.g., /crypto bitcoin)
+    """
+    url = f"https://api.coingecko.com/api/v3/simple/price?ids={symbol}&vs_currencies=usd"
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        if symbol in data:
+            price = data[symbol]['usd']
+            return f"💰 <b>{symbol.capitalize()} Price:</b> ${price}"
+        else:
+            return "❌ Cryptocurrency not found. Check the symbol and try again."
+    else:
+        return "❌ Unable to fetch crypto price at the moment."
+
+
 def main():
     update_id = None
     print("Bot started...")
@@ -173,9 +191,24 @@ def main():
                 """
                 joke = get_joke()
                 send_message(chat_id, joke, message_id)
-                
+            elif text.startswith("/crypto"):
+                """
+                Fetches the current price of a cryptocurrency.
+                Usage: /crypto <symbol> (e.g., /crypto bitcoin)
+                """
+                parts = text.split()
+                if len(parts) == 2:
+                    symbol = parts[1].lower()
+                    price_info = get_crypto_price(symbol)
+                else:
+                    price_info = "ℹ️ Usage: /crypto <symbol> (e.g., /crypto bitcoin)"
+                send_message(chat_id, price_info, message_id)  
+   
+              
             else:
                 send_message(chat_id, "Invalid message", message_id)
+
+                
 
         time.sleep(0.5)
 
