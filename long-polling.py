@@ -551,3 +551,47 @@ def main():
 
 if __name__ == '__main__':
     main()
+import sqlite3
+
+# Database setup
+def init_db():
+    conn = sqlite3.connect("crush_bot.db")
+    cursor = conn.cursor()
+    cursor.execute('''CREATE TABLE IF NOT EXISTS crushes (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        user TEXT NOT NULL,
+                        crush TEXT NOT NULL,
+                        mutual BOOLEAN DEFAULT 0)''')
+    conn.commit()
+    conn.close()
+
+# Add crush function
+def add_crush(user, crush):
+    conn = sqlite3.connect("crush_bot.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM crushes WHERE user=? AND crush=?", (crush, user))
+    existing_crush = cursor.fetchone()
+    if existing_crush:
+        cursor.execute("UPDATE crushes SET mutual=1 WHERE user=? AND crush=?", (crush, user))
+        conn.commit()
+        conn.close()
+        return True
+    else:
+        cursor.execute("INSERT INTO crushes (user, crush) VALUES (?, ?)", (user, crush))
+        conn.commit()
+        conn.close()
+        return False
+
+# Example usage
+def main():
+    init_db()
+    user = input("Enter your username: ")
+    crush = input("Enter your crush's username: ")
+    
+    if add_crush(user, crush):
+        print(f"💖 Mutual crush detected! You and {crush} have liked each other! 🎉")
+    else:
+        print(f"✅ Your message has been saved. If {crush} likes you back, you'll be notified!")
+
+if __name__ == '__main__':
+    main()
