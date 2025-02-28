@@ -68,7 +68,7 @@ pip install -r requirements.txt
 
 ---
 
-### **4. Set Up Ngrok for Webhooks (If Needed)**  
+### **4. Set Up Ngrok for Webhooks (Not needed for now, skip it)**  
 
 If your bot uses webhooks, you'll need to expose your local server to the internet using [Ngrok](https://ngrok.com/).  
 

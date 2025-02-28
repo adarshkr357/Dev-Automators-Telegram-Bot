@@ -1,3 +1,6 @@
 Flask
 requests
 python-dotenv
+Pillow
+PyPDF2
+pycountry
