@@ -143,6 +143,20 @@ def get_joke():
     return "Sorry, I couldn't fetch a joke at the moment."
 
 
+def get_dog_fact():
+    """
+    This function fetches a random dog fact from the Dog API.
+    It returns the first fact from the API response.
+    """
+    dog_fact_url = "https://dog-api.kinduff.com/api/facts"
+    response = requests.get(dog_fact_url)
+    if response.status_code == 200:
+        data = response.json()
+        return data.get("facts", ["No fact available"])[0]  # Safely fetching the first fact
+    return "Sorry, I couldn't fetch a dog fact at the moment."
+
+
+
 def get_github_profile(username):
     """
     Gets GitHub user details like profile link, public repos,
@@ -453,6 +467,10 @@ def main():
             elif text == "/news":
                 news = get_news()
                 send_message(chat_id, news, message_id)
+
+            elif text == "/dogfact":
+                dog_fact = get_dog_fact()
+                send_message(chat_id, dog_fact, message_id)
 
             elif text == "/help":
                 """
