@@ -1,4 +1,3 @@
-# Built-in modules
 import os
 import time
 import threading
@@ -24,13 +23,11 @@ if not NEWS_API_KEY:
 
 """
 Follow these steps to get your API key:
-
 1️⃣ Go to https://home.openweathermap.org/users/sign_up and sign up.
 2️⃣ Log in to your account.
 3️⃣ Navigate to the "API keys" section.
 4️⃣ Click on "Generate a new key" and give it a name.
 5️⃣ Copy the generated API key and use it.
-
 🔹 Note: It may take a few hours for the API key to activate.
 🔹 Free-tier API has rate limits, so use it wisely!
 """
