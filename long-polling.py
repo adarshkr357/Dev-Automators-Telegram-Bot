@@ -1,4 +1,5 @@
 # Built-in modules
+
 import os
 import time
 import threading
@@ -393,6 +394,52 @@ def get_live_score():
     else:
         return "❌ Unable to connect to live score API!"
 
+# Interval for reminders (in seconds)
+REMINDER_INTERVAL = 3600  # set your own time span here in seconds
+def handle_updates():
+    offset = None
+    while True:
+        updates = get_updates(offset)
+        if updates:
+            for update in updates:
+                # Update offset to avoid processing the same message multiple times
+                offset = update['update_id'] + 1
+                chat_id = update['message']['chat']['id']
+                text = update['message']['text']
+
+                # /start command: subscribe user to reminders
+                if text == "/start":
+                    users.add(chat_id)
+                    send_message(chat_id, "You have subscribed to periodic reminders!")
+
+                # /stop command: unsubscribe user from reminders
+                elif text == "/stop":
+                    if chat_id in users:
+                        users.remove(chat_id)
+                        send_message(chat_id, "You have unsubscribed from periodic reminders.")
+                    else:
+                        send_message(chat_id, "You were not subscribed to periodic reminders.")
+
+# Function to send periodic reminders
+def send_periodic_reminder():
+    while True:
+        for user in users:
+            send_message(user, "This is your periodic reminder!")
+        time.sleep(REMINDER_INTERVAL)
+
+# Function to start the bot
+def start_bot():
+    # Start the long polling thread
+    threading.Thread(target=handle_updates, daemon=True).start()
+
+    # Start the periodic reminder thread
+    threading.Thread(target=send_periodic_reminder, daemon=True).start()
+
+    # Keep the main thread alive to run background threads
+    while True:
+        time.sleep(10)
+
+
 def main():
     update_id = None
     print("Bot started...")
@@ -548,3 +595,4 @@ def main():
 if __name__ == "__main__":
     polling_thread = threading.Thread(target=main)
     polling_thread.start()
+    start_bot()
