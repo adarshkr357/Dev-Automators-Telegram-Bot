@@ -22,6 +22,10 @@ NEWS_API_KEY = os.getenv("NEWS_API_KEY")  # Get from https://newsapi.org/registe
 if not NEWS_API_KEY:
     print("NEWS_API_KEY not found. Please set it in .env file.")
 
+CRIC_KEY = os.getenv("CRIC_KEY")  # Get from https://cricketdata.org/signup.aspx
+if not CRIC_KEY:
+    print("CRIC_KEY not found. Please set it in .env file.")
+
 """
 Follow these steps to get your API key:
 
@@ -154,7 +158,6 @@ def get_dog_fact():
         data = response.json()
         return data.get("facts", ["No fact available"])[0]  # Safely fetching the first fact
     return "Sorry, I couldn't fetch a dog fact at the moment."
-
 
 
 def get_github_profile(username):
@@ -354,8 +357,7 @@ def get_weather(city, country):
 
 # Function to get live cricket scores
 def get_live_score():
-    api_key = "934e1c49-a774-4755-a6c3-a974b99d165d"  # Replace with a valid API key
-    url = f"https://api.cricapi.com/v1/currentMatches?apikey={api_key}&offset=0"
+    url = f"https://api.cricapi.com/v1/currentMatches?apikey={CRIC_KEY}&offset=0"
     
     response = requests.get(url)
     
