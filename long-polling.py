@@ -13,8 +13,8 @@ from PIL import Image
 from PyPDF2 import PdfReader
 
 load_dotenv()
-
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+NEWS_API_KEY = os.getenv("NewsAPI_KEY")
 if not BOT_TOKEN:
     raise ValueError("BOT_TOKEN not found. Please set it in .env file.")
 
@@ -46,6 +46,24 @@ BASE_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/"
 NEWS_URL = f"https://newsapi.org/v2/top-headlines?country=us&apiKey={NEWS_API_KEY}"
 
 greetings = ["Hello!", "Hi there!", "Greetings!", "Salutations!", "Howdy!"]
+quiz_questions = [
+    {
+        "question": "What is the capital of France?",
+        "options": ["Paris", "London", "Berlin", "Madrid"],
+        "answer": "Paris"
+    },
+    {
+        "question": "Which planet is known as the Red Planet?",
+        "options": ["Earth", "Mars", "Jupiter", "Saturn"],
+        "answer": "Mars"
+    },
+    {
+        "question": "Who wrote 'To Kill a Mockingbird'?",
+        "options": ["Harper Lee", "Mark Twain", "J.K. Rowling", "Ernest Hemingway"],
+        "answer": "Harper Lee"
+    }
+]
+
 
 moods = [
     "😊 Happy: Because you're here, and that's all I need!",
@@ -61,6 +79,18 @@ def get_updates(offset=None):
     response = requests.get(url, params=params).json()
     return response
 
+def check_quiz_answer(chat_id, user_answer, correct_answer):
+    if user_answer == correct_answer:
+        send_message(chat_id, "✅ Correct! Well done!")
+    else:
+        send_message(chat_id, f"❌ Incorrect. The correct answer was: {correct_answer}")
+
+def start_quiz(chat_id):
+    question = random.choice(quiz_questions)
+    options = "\n".join([f"{i+1}. {opt}" for i, opt in enumerate(question["options"])])
+    quiz_message = f"❓ <b>{question['question']}</b>\n\n{options}\n\nPlease reply with the correct option number."
+    send_message(chat_id, quiz_message)
+    return question
 
 def get_news():
     params = {
@@ -423,6 +453,7 @@ def get_fun_fact():
 
 def main():
     update_id = None
+    current_quiz = {}
     print("Bot started...")
     while True:
         updates = get_updates(offset=update_id)
@@ -570,6 +601,22 @@ def main():
                             "❌ Invalid format! Please enter as: <code>/weather City, Country</code>\nExample: <code>/weather Delhi, India</code>",
                             message_id,
                         )
+                
+            elif text == "/quiz":
+                current_quiz[chat_id] = start_quiz(chat_id)
+
+            elif chat_id in current_quiz:
+                question = current_quiz[chat_id]
+                try:
+                    user_answer_index = int(text) - 1
+                    user_answer = question["options"][user_answer_index]
+                    check_quiz_answer(chat_id, user_answer, question["answer"])
+                except (ValueError, IndexError):
+                    send_message(chat_id, "❌ Invalid option. Please reply with the correct option number.")
+                finally:
+                    del current_quiz[chat_id]
+            
+                
 
             else:
                 send_message(chat_id, "Invalid message", message_id)
