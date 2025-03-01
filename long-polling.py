@@ -311,7 +311,7 @@ def get_help_message():
         "📁 <b>File Processing:</b>\n"
         "🔹 <b>Upload an Image</b> - Convert between PNG and JPEG formats\n"
         "🔹 <b>Upload a PDF</b> - Extract text from the PDF file\n\n"
-        "ℹ️ <i>Type a command or send a file to get started!</i>"
+        "i <i>Type a command or send a file to get started!</i>"
     )
 
 
@@ -341,22 +341,6 @@ def get_country_code(country_name):
     """
     country = pycountry.countries.get(name=country_name.title())
     return country.alpha_2 if country else None
-
-
-# Fetch weather details when country code is provided
-def get_weather(city, country):
-    country_code = get_country_code(country)
-    if not country_code:
-        return "❌ Invalid country name! Please enter a valid country (e.g., 'India')."
-    weather_url = f"http://api.openweathermap.org/data/2.5/weather?q={city},{country_code}&appid={OPEN_WEATHER_KEY}&units=metric"
-    response = requests.get(weather_url)
-    if response.status_code == 200:
-        weather_data = response.json()
-        temp = weather_data["main"]["temp"]
-        description = weather_data["weather"][0]["description"].capitalize()
-        return f"🌤 Weather in {city.capitalize()}, {country.capitalize()}:\n🌡 Temperature: {temp}°C\n☁ Condition: {description}"
-
-    return "Error: Unable to get weather update!"
 
 # Function to get live cricket scores
 def get_live_score():
@@ -529,32 +513,6 @@ def main():
             # Command handling for the bot
             elif text == "/livescore":
                 send_message(chat_id, get_live_score(), message_id)
-        
-            elif text.startswith("/weather"):
-                """
-                Fetches weather details if the user provides a city and country.
-                Ensures correct input format and prevents errors.
-                """
-                inpu = text.split("/weather", 1)[-1].strip()
-
-                if not inpu:
-                    send_message(
-                        chat_id,
-                        "❌ Please enter the city and country in this format:\n<code>/weather Delhi, India</code>",
-                        message_id,
-                    )
-
-                else:
-                    try:
-                        city, country = map(str.strip, inpu.split(", ", 1))
-                        weather = get_weather(city, country)
-                        send_message(chat_id, weather, message_id)
-                    except ValueError:
-                        send_message(
-                            chat_id,
-                            "❌ Invalid format! Please enter as: <code>/weather City, Country</code>\nExample: <code>/weather Delhi, India</code>",
-                            message_id,
-                        )
 
             else:
                 send_message(chat_id, "Invalid message", message_id)
