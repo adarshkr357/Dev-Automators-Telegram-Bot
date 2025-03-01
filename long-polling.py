@@ -393,6 +393,20 @@ def get_live_score():
     else:
         return "❌ Unable to connect to live score API!"
 
+# This will give a random fun fact
+def get_fun_fact():
+    """
+    Fetches a random fun fact.
+    Returns the fact as a string.
+    """
+    fact_url = "https://uselessfacts.jsph.pl/random.json?language=en"
+    response = requests.get(fact_url)
+    
+    if response.status_code == 200:
+        data = response.json()
+        return f"🤓 <b>Did You Know?</b>\n{data['text']}"
+    return "❌ Unable to fetch a fun fact at the moment."
+
 def main():
     update_id = None
     print("Bot started...")
@@ -412,6 +426,10 @@ def main():
             if text == "/start":
                 greeting = random.choice(greetings)
                 send_message(chat_id, greeting, message_id)
+
+            elif text == "/fact":
+                fact = get_fun_fact()
+                send_message(chat_id, fact, message_id)
 
             elif text.startswith("/devian "):
                 """
