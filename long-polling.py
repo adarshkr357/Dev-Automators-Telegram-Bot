@@ -156,7 +156,9 @@ def get_dog_fact():
     response = requests.get(dog_fact_url)
     if response.status_code == 200:
         data = response.json()
-        return data.get("facts", ["No fact available"])[0]  # Safely fetching the first fact
+        return data.get("facts", ["No fact available"])[
+            0
+        ]  # Safely fetching the first fact
     return "Sorry, I couldn't fetch a dog fact at the moment."
 
 
@@ -355,38 +357,45 @@ def get_weather(city, country):
 
     return "Error: Unable to get weather update!"
 
+
 # Function to get live cricket scores
 def get_live_score():
     url = f"https://api.cricapi.com/v1/currentMatches?apikey={CRIC_KEY}&offset=0"
-    
+
     response = requests.get(url)
-    
+
     if response.status_code == 200:
         data = response.json()
         if data.get("status") == "success" and "data" in data:
             matches = data["data"]
-            live_matches = [m for m in matches if m.get("matchStarted") and not m.get("matchEnded")]
-            
+            live_matches = [
+                m for m in matches if m.get("matchStarted") and not m.get("matchEnded")
+            ]
+
             if live_matches:
                 match = live_matches[0]  # Get the first live match
                 team1 = match["teamInfo"][0]["name"]
                 team2 = match["teamInfo"][1]["name"]
                 score = match.get("score", [])
-                
+
                 if score:
                     team1_score = score[0].get("r", "N/A")
                     team1_wickets = score[0].get("w", "N/A")
                     team1_overs = score[0].get("o", "N/A")
-                    
+
                     team2_score = score[1].get("r", "N/A") if len(score) > 1 else "N/A"
-                    team2_wickets = score[1].get("w", "N/A") if len(score) > 1 else "N/A"
+                    team2_wickets = (
+                        score[1].get("w", "N/A") if len(score) > 1 else "N/A"
+                    )
                     team2_overs = score[1].get("o", "N/A") if len(score) > 1 else "N/A"
-                    
-                    return (f"🏏 <b>Live Match:</b> {team1} vs {team2}\n\n"
-                            f"🔹 <b>{team1}:</b> {team1_score}/{team1_wickets} ({team1_overs} overs)\n"
-                            f"🔹 <b>{team2}:</b> {team2_score}/{team2_wickets} ({team2_overs} overs)\n\n"
-                            f"📢 <b>Status:</b> {match['status']}")
-                
+
+                    return (
+                        f"🏏 <b>Live Match:</b> {team1} vs {team2}\n\n"
+                        f"🔹 <b>{team1}:</b> {team1_score}/{team1_wickets} ({team1_overs} overs)\n"
+                        f"🔹 <b>{team2}:</b> {team2_score}/{team2_wickets} ({team2_overs} overs)\n\n"
+                        f"📢 <b>Status:</b> {match['status']}"
+                    )
+
                 return f"🏏 <b>Live Match:</b> {team1} vs {team2}\n\n📢 <b>Status:</b> {match['status']}"
             else:
                 return "⚠ No live matches currently. Check back later!"
@@ -394,6 +403,7 @@ def get_live_score():
             return "❌ Error fetching live scores!"
     else:
         return "❌ Unable to connect to live score API!"
+
 
 # This will give a random fun fact
 def get_fun_fact():
@@ -403,11 +413,12 @@ def get_fun_fact():
     """
     fact_url = "https://uselessfacts.jsph.pl/random.json?language=en"
     response = requests.get(fact_url)
-    
+
     if response.status_code == 200:
         data = response.json()
         return f"🤓 <b>Did You Know?</b>\n{data['text']}"
     return "❌ Unable to fetch a fun fact at the moment."
+
 
 def main():
     update_id = None
@@ -532,7 +543,7 @@ def main():
             # Command handling for the bot
             elif text == "/livescore":
                 send_message(chat_id, get_live_score(), message_id)
-        
+
             elif text.startswith("/weather"):
                 """
                 Fetches weather details if the user provides a city and country.
