@@ -50,6 +50,10 @@ moods = [
     "🤩 Excited: Ahh! You're here! U made my  day! 🎉",
 ]
 
+# guessing lucky number and unlucky number
+def get_number(type):
+    return f"Your {type} number is: {random.randint(1, 100)}"
+
 
 def get_updates(offset=None):
     url = BASE_URL + "getUpdates"
@@ -412,6 +416,11 @@ def main():
             if text == "/start":
                 greeting = random.choice(greetings)
                 send_message(chat_id, greeting, message_id)
+            
+            elif text == "/checkluck":
+                print(get_number("lucky"))
+                print(get_number("unlucky"))
+
 
             elif text.startswith("/devian "):
                 """
