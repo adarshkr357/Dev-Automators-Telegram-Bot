@@ -34,12 +34,29 @@ moods = [
     "🤩 Excited: Ahh! You're here! U made my  day! 🎉",
 ]
 
-def send_scheduled_message(chat_id, text, delay):
+def send_scheduled_message(chat_id, text, delay, gif_url=None):
     def send():
         send_message(chat_id, text)
+        if gif_url:
+            send_animation(chat_id, gif_url)
     timer = threading.Timer(delay, send)
     timer.start()
 
+def send_animation(chat_id, animation_url, caption=None, reply_to_message_id=None):
+    url = BASE_URL + "sendAnimation"
+    data = {
+        "chat_id": chat_id,
+        "animation": animation_url,
+        "parse_mode": "HTML",
+    }
+
+    if caption:
+        data["caption"] = caption
+
+    if reply_to_message_id:
+        data["reply_to_message_id"] = reply_to_message_id
+
+    requests.post(url, data=data)
 def get_updates(offset=None):
     url = BASE_URL + "getUpdates"
     params = {"timeout": 100, "offset": offset}
@@ -404,12 +421,12 @@ def main():
 
             elif text.startswith("/alarm"):
                 try:
-                    parts = text.split(" ", 2)
-                    delay = int(parts[1])
-                    alarm_text = parts[2]
-                    send_scheduled_message(chat_id, alarm_text, delay)
-                    send_message(chat_id, f"Alarm set for {delay} seconds", message_id)
-
+                     parts = text.split(" ", 3)
+                     delay = int(parts[1])
+                     alarm_text = parts[2]
+                     gif_url = parts[3] if len(parts) > 3 else "https://media.giphy.com/media/3o7TKz50Rg6ZG7O7KM/giphy.gif"
+                     send_scheduled_message(chat_id, alarm_text, delay, gif_url)
+                     send_message(chat_id, f"Alarm set for {delay} seconds", message_id)
                 except (IndexError, ValueError):
                     send_message(chat_id, "Usage: /alarm <delay_in_seconds> <message>", message_id)
 
@@ -435,7 +452,7 @@ def main():
                     repo_path = inpu[2]
                     response = get_github_repo(repo_path)
                 else:
-                    response = "ℹ️ Usage: `/github <username>` or `/github repo <username>/<repo>`"
+                    response = "i Usage: `/github <username>` or `/github repo <username>/<repo>`"
                 send_message(chat_id, response, message_id)
 
             elif text == "/joke":
