@@ -548,3 +548,63 @@ def main():
 if __name__ == "__main__":
     polling_thread = threading.Thread(target=main)
     polling_thread.start()
+import requests
+import time
+
+# Define your bot's token (obtained from BotFather)
+API_TOKEN = "YOUR_BOT_API_TOKEN"
+
+# Telegram API base URL
+BASE_URL = f"https://api.telegram.org/bot{API_TOKEN}/"
+
+# Function to get the latest updates from the bot
+def get_updates(offset=None):
+    url = BASE_URL + "getUpdates"
+    if offset:
+        url += f"?offset={offset}"
+    response = requests.get(url)
+    return response.json()
+
+# Function to send a message to a user
+def send_message(chat_id, text):
+    url = BASE_URL + "sendMessage"
+    params = {
+        "chat_id": chat_id,
+        "text": text
+    }
+    response = requests.post(url, data=params)
+    return response.json()
+
+# Function to handle the message
+def handle_message(message):
+    chat_id = message['chat']['id']
+    text = message['text'].lower()
+
+    # Basic logic to respond based on the received message
+    if "hi" in text or "hello" in text:
+        send_message(chat_id, "Hey there! ❤️ What's up?")
+    elif "crush" in text:
+        send_message(chat_id, "Oh, you have a crush? 😍 Tell me more!")
+    elif "love" in text:
+        send_message(chat_id, "Love is in the air! 💖 Who's your special one?")
+    else:
+        send_message(chat_id, "Hmm... tell me more! 💬")
+
+# Main function to constantly check for new messages
+def main():
+    print("Bot is running...")
+    offset = None  # Start with no offset, to get the most recent updates
+    while True:
+        updates = get_updates(offset)
+        if "result" in updates:
+            for update in updates['result']:
+                message = update.get('message')
+                if message:
+                    handle_message(message)
+                    # Set the offset to the last update's ID + 1
+                    offset = update['update_id'] + 1
+        time.sleep(1)  # Sleep to prevent excessive API calls
+
+# Run the bot
+if __name__ == '__main__':
+    main()
