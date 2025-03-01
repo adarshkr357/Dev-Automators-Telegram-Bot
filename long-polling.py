@@ -11,12 +11,14 @@ from dotenv import load_dotenv
 import pycountry
 from PIL import Image
 from PyPDF2 import PdfReader
+from telegram import Update
+from telegram.ext import Application, MessageHandler, CallbackContext
 
 load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 if not BOT_TOKEN:
-    raise ValueError("BOT_TOKEN not found. Please set it in .env file.")
+   raise ValueError("BOT_TOKEN not found. Please set it in .env file.")
 
 NEWS_API_KEY = os.getenv("NEWS_API_KEY")  # Get from https://newsapi.org/register
 if not NEWS_API_KEY:
@@ -40,6 +42,14 @@ if not OPEN_WEATHER_KEY:
 
 BASE_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/"
 NEWS_URL = f"https://newsapi.org/v2/top-headlines?country=us&apiKey={NEWS_API_KEY}"
+
+# Dictionary API (Replace with your actual API key)
+DICTIONARY_API_URL = "https://twinword-word-graph-dictionary.p.rapidapi.com"
+DICTIONARY_API_KEY = "{ENTER_DICTIONARY_API_KEY}"
+HEADERS = {
+    "X-RapidAPI-Key": DICTIONARY_API_KEY,
+    "X-RapidAPI-Host": "twinword-word-graph-dictionary.p.rapidapi.com"
+}
 
 greetings = ["Hello!", "Hi there!", "Greetings!", "Salutations!", "Howdy!"]
 
@@ -393,6 +403,30 @@ def get_live_score():
     else:
         return "❌ Unable to connect to live score API!"
 
+# Function to fetch word meaning
+def get_meaning(word):
+    url = f"{DICTIONARY_API_URL}/definition?word={word}"
+    response = requests.get(url, headers=HEADERS).json()
+
+    if "definitions" in response:
+        return response["definitions"][0]["definition"]  # Get the first definition
+    return "Sorry, I couldn't find the meaning of that word."
+
+# Handle user messages
+async def handle_message(update: Update, context: CallbackContext):
+    chat_id = update.message.chat_id
+    user_message = update.message.text.strip()
+    
+    if user_message.lower() == "/search":
+        await update.message.reply_text("Hi! Please send me a word, and I will tell you its meaning.")
+        return
+
+    word = user_message.strip()
+    await update.message.reply_text(f"Searching for the meaning of: {word}...")
+    
+    meaning = get_meaning(word)
+    await update.message.reply_text(f"Meaning: {meaning}")
+
 def main():
     update_id = None
     print("Bot started...")
@@ -543,8 +577,17 @@ def main():
                 send_message(chat_id, "Invalid message", message_id)
 
         time.sleep(0.5)
+    # Create the Application instance
+    application = Application.builder().token(BOT_TOKEN).build()
+
+    # Add the handler for user messages
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    
+    # Start polling for updates
+    application.run_polling()
 
 
 if __name__ == "__main__":
+    main()
     polling_thread = threading.Thread(target=main)
     polling_thread.start()
