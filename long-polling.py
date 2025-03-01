@@ -373,30 +373,31 @@ def get_live_score():
             ]
 
             if live_matches:
-                match = live_matches[0]  # Get the first live match
+                match = None
+                for team in live_matches:
+                    if team.get("teamInfo", False):
+                        match = team
+                        if match.get("score", False):
+                            score = match.get("score")
+                            break
                 team1 = match["teamInfo"][0]["name"]
                 team2 = match["teamInfo"][1]["name"]
-                score = match.get("score", [])
 
-                if score:
-                    team1_score = score[0].get("r", "N/A")
-                    team1_wickets = score[0].get("w", "N/A")
-                    team1_overs = score[0].get("o", "N/A")
+                team1_score = score[0].get("r", "NA")
+                team1_wickets = score[0].get("w", "NA")
+                team1_overs = score[0].get("o", "NA")
 
-                    team2_score = score[1].get("r", "N/A") if len(score) > 1 else "N/A"
-                    team2_wickets = (
-                        score[1].get("w", "N/A") if len(score) > 1 else "N/A"
-                    )
-                    team2_overs = score[1].get("o", "N/A") if len(score) > 1 else "N/A"
+                team2_score = score[1].get("r", "NA") if len(score) > 1 else "NA"
+                team2_wickets = score[1].get("w", "NA") if len(score) > 1 else "NA"
+                team2_overs = score[1].get("o", "NA") if len(score) > 1 else "NA"
 
-                    return (
-                        f"🏏 <b>Live Match:</b> {team1} vs {team2}\n\n"
-                        f"🔹 <b>{team1}:</b> {team1_score}/{team1_wickets} ({team1_overs} overs)\n"
-                        f"🔹 <b>{team2}:</b> {team2_score}/{team2_wickets} ({team2_overs} overs)\n\n"
-                        f"📢 <b>Status:</b> {match['status']}"
-                    )
+                return (
+                    f"🏏 <b>Live Match:</b> {team1} vs {team2}\n\n"
+                    f"🔹 <b>{team1}:</b> {team1_score}/{team1_wickets} ({team1_overs} overs)\n"
+                    f"🔹 <b>{team2}:</b> {team2_score}/{team2_wickets} ({team2_overs} overs)\n\n"
+                    f"📢 <b>Status:</b> {match['status']}"
+                )
 
-                return f"🏏 <b>Live Match:</b> {team1} vs {team2}\n\n📢 <b>Status:</b> {match['status']}"
             else:
                 return "⚠ No live matches currently. Check back later!"
         else:
