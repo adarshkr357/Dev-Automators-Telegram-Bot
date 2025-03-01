@@ -421,6 +421,29 @@ def get_fun_fact():
     return "❌ Unable to fetch a fun fact at the moment."
 
 
+def get_movie_details(movie_name):
+    """
+    Fetches movie details from the OMDB API.
+    """
+    api_key = "your_omdb_api_key"  # Replace with your OMDB API key
+    url = f"http://www.omdbapi.com/?t={movie_name}&apikey={api_key}"
+    
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        if data["Response"] == "True":
+            movie_info = (
+                f"🎬 <b>{data['Title']}</b> ({data['Year']})\n"
+                f"📽 <b>Genre:</b> {data['Genre']}\n"
+                f"🎭 <b>Actors:</b> {data['Actors']}\n"
+                f"📊 <b>IMDB Rating:</b> {data['imdbRating']}\n"
+                f"📝 <b>Plot:</b> {data['Plot']}"
+            )
+            return movie_info
+        else:
+            return "❌ Movie not found! Please check the name and try again."
+    return "❌ Unable to fetch movie details at the moment."
+
 def main():
     update_id = None
     print("Bot started...")
@@ -440,6 +463,14 @@ def main():
             if text == "/start":
                 greeting = random.choice(greetings)
                 send_message(chat_id, greeting, message_id)
+            elif text.startswith("/movie "):
+                """
+                Fetches movie details from OMDB API using the given movie name.
+                Usage: /movie <movie_name>
+                """
+                movie_name = text.split("/movie ", 1)[1]
+                movie_details = get_movie_details(movie_name)
+                send_message(chat_id, movie_details, message_id)
 
             elif text == "/fact":
                 fact = get_fun_fact()
