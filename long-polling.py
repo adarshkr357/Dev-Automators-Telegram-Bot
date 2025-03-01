@@ -22,22 +22,6 @@ NEWS_API_KEY = os.getenv("NEWS_API_KEY")  # Get from https://newsapi.org/registe
 if not NEWS_API_KEY:
     print("NEWS_API_KEY not found. Please set it in .env file.")
 
-"""
-Follow these steps to get your API key:
-
-1️⃣ Go to https://home.openweathermap.org/users/sign_up and sign up.
-2️⃣ Log in to your account.
-3️⃣ Navigate to the "API keys" section.
-4️⃣ Click on "Generate a new key" and give it a name.
-5️⃣ Copy the generated API key and use it.
-
-🔹 Note: It may take a few hours for the API key to activate.
-🔹 Free-tier API has rate limits, so use it wisely!
-"""
-OPEN_WEATHER_KEY = os.getenv("OPEN_WEATHER_KEY")
-if not OPEN_WEATHER_KEY:
-    print("OPEN_WEATHER_KEY not found. Please set it in .env file.")
-
 BASE_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/"
 NEWS_URL = f"https://newsapi.org/v2/top-headlines?country=us&apiKey={NEWS_API_KEY}"
 
@@ -50,6 +34,11 @@ moods = [
     "🤩 Excited: Ahh! You're here! U made my  day! 🎉",
 ]
 
+def send_scheduled_message(chat_id, text, delay):
+    def send():
+        send_message(chat_id, text)
+    timer = threading.Timer(delay, send)
+    timer.start()
 
 def get_updates(offset=None):
     url = BASE_URL + "getUpdates"
@@ -412,6 +401,17 @@ def main():
             if text == "/start":
                 greeting = random.choice(greetings)
                 send_message(chat_id, greeting, message_id)
+
+            elif text.startswith("/alarm"):
+                try:
+                    parts = text.split(" ", 2)
+                    delay = int(parts[1])
+                    alarm_text = parts[2]
+                    send_scheduled_message(chat_id, alarm_text, delay)
+                    send_message(chat_id, f"Alarm set for {delay} seconds", message_id)
+
+                except (IndexError, ValueError):
+                    send_message(chat_id, "Usage: /alarm <delay_in_seconds> <message>", message_id)
 
             elif text.startswith("/devian "):
                 """
