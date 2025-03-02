@@ -94,14 +94,14 @@ def send_message(
 
     requests.post(url, data=data)
 
-import requests
 
-BOT_TOKEN = "YOUR_TELEGRAM_BOT_TOKEN"
+
+def get_myth():
+    BOT_TOKEN = "YOUR_TELEGRAM_BOT_TOKEN"
 API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/"
 
 MYTH_API_URL = "https://api.api-ninjas.com/v1/mythology"
 API_KEY = "YOUR_MYTH_API_KEY"
-def get_myth():
     response = requests.get(MYTH_API_URL, headers={"X-Api-Key": API_KEY})
     if response.status_code == 200 and response.json():
         data = response.json()[0]
