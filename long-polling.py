@@ -26,6 +26,10 @@ CRIC_KEY = os.getenv("CRIC_KEY")  # Get from https://cricketdata.org/signup.aspx
 if not CRIC_KEY:
     print("CRIC_KEY not found. Please set it in .env file.")
 
+OMDB_KEY = os.getenv("OMDB_KEY")  # Get from https://www.omdbapi.com/apikey.aspx
+if not OMDB_KEY:
+    print("OMDB_KEY not found. Please set it in .env file.")
+
 """
 Follow these steps to get your API key:
 
@@ -425,9 +429,8 @@ def get_movie_details(movie_name):
     """
     Fetches movie details from the OMDB API.
     """
-    api_key = "your_omdb_api_key"  # Replace with your OMDB API key
-    url = f"http://www.omdbapi.com/?t={movie_name}&apikey={api_key}"
-    
+    url = f"http://www.omdbapi.com/?t={movie_name}&apikey={OMDB_KEY}"
+
     response = requests.get(url)
     if response.status_code == 200:
         data = response.json()
@@ -443,6 +446,7 @@ def get_movie_details(movie_name):
         else:
             return "❌ Movie not found! Please check the name and try again."
     return "❌ Unable to fetch movie details at the moment."
+
 
 def main():
     update_id = None
@@ -463,6 +467,7 @@ def main():
             if text == "/start":
                 greeting = random.choice(greetings)
                 send_message(chat_id, greeting, message_id)
+
             elif text.startswith("/movie "):
                 """
                 Fetches movie details from OMDB API using the given movie name.
