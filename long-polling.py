@@ -50,7 +50,7 @@ OPEN_WEATHER_KEY = os.getenv("OPEN_WEATHER_KEY")
 if not OPEN_WEATHER_KEY:
     print("OPEN_WEATHER_KEY not found. Please set it in .env file.")
 
-BASE_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
+BASE_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/"
 NEWS_URL = f"https://newsapi.org/v2/top-headlines?country=us&apiKey={NEWS_API_KEY}"
 
 greetings = ["Hello!", "Hi there!", "Greetings!", "Salutations!", "Howdy!"]
