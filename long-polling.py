@@ -448,8 +448,6 @@ def get_movie_details(movie_name):
     return "❌ Unable to fetch movie details at the moment."
 
 
-import random
-
 # Dictionary to store user guesses
 user_scramble_answers = {}
 
