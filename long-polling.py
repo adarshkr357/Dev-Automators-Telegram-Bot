@@ -448,6 +448,23 @@ def get_movie_details(movie_name):
     return "❌ Unable to fetch movie details at the moment."
 
 
+def scramble_word(word):
+    """
+    Scrambles the letters of a given word.
+    """
+    word_letters = list(word)
+    random.shuffle(word_letters)
+    return ''.join(word_letters)
+
+def word_scramble_game():
+    """
+    Selects a random word, scrambles it, and returns the scrambled word along with the original for validation.
+    """
+    words = ["elephant", "giraffe", "chocolate", "penguin", "umbrella", "mountain"]
+    original_word = random.choice(words)
+    scrambled_word = scramble_word(original_word)
+    return scrambled_word, original_word
+
 def main():
     update_id = None
     print("Bot started...")
@@ -467,6 +484,19 @@ def main():
             if text == "/start":
                 greeting = random.choice(greetings)
                 send_message(chat_id, greeting, message_id)
+
+            elif text == "/scramble":
+                scrambled, original = word_scramble_game()
+                user_scramble_answers[chat_id] = original  # Store the correct word for this user
+                send_message(chat_id, f"🔤 Unscramble this word: **{scrambled}**\nReply with your answer!", message_id)
+
+            elif chat_id in user_scramble_answers:  # Checking if user is answering a scramble
+                correct_answer = user_scramble_answers[chat_id]
+                if text.lower() == correct_answer.lower():
+                    send_message(chat_id, f"✅ Correct! The word was **{correct_answer}** 🎉", message_id)
+                    del user_scramble_answers[chat_id]  # Remove from dictionary after correct guess
+                else:
+                    send_message(chat_id, "❌ Wrong answer! Try again.", message_id)
 
             elif text.startswith("/movie "):
                 """
