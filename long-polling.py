@@ -94,6 +94,19 @@ def send_message(
 
     requests.post(url, data=data)
 
+import requests
+
+BOT_TOKEN = "YOUR_TELEGRAM_BOT_TOKEN"
+API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/"
+
+MYTH_API_URL = "https://api.api-ninjas.com/v1/mythology"
+API_KEY = "YOUR_MYTH_API_KEY"
+def get_myth():
+    response = requests.get(MYTH_API_URL, headers={"X-Api-Key": API_KEY})
+    if response.status_code == 200 and response.json():
+        data = response.json()[0]
+        return f"🧿 {data['name']}\n📖 {data['description']}"
+    return "⚠️ No myth found. Try again!"
 
 def send_photo(
     chat_id,
@@ -440,6 +453,15 @@ def main():
             if text == "/start":
                 greeting = random.choice(greetings)
                 send_message(chat_id, greeting, message_id)
+
+            elif text == "/myth":
+                """
+                This block checks if the command /myth is typed by the user while using the bot 
+                and helps us to send a mythology fact.
+                """
+                myth = get_myth()
+                send_message(chat_id, myth, message_id)
+
 
             elif text == "/fact":
                 fact = get_fun_fact()
