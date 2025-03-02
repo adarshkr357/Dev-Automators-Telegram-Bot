@@ -448,6 +448,11 @@ def get_movie_details(movie_name):
     return "❌ Unable to fetch movie details at the moment."
 
 
+import random
+
+# Dictionary to store user guesses
+user_scramble_answers = {}
+
 def scramble_word(word):
     """
     Scrambles the letters of a given word.
@@ -464,6 +469,7 @@ def word_scramble_game():
     original_word = random.choice(words)
     scrambled_word = scramble_word(original_word)
     return scrambled_word, original_word
+
 
 def main():
     update_id = None
