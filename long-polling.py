@@ -421,6 +421,24 @@ def get_fun_fact():
     return "❌ Unable to fetch a fun fact at the moment."
 
 
+def scramble_word(word):
+    """
+    Scrambles the letters of a given word.
+    """
+    word_letters = list(word)
+    random.shuffle(word_letters)
+    return ''.join(word_letters)
+
+def word_scramble_game():
+    """
+    Selects a random word, scrambles it, and returns the scrambled word along with the original for validation.
+    """
+    words = ["elephant", "giraffe", "chocolate", "penguin", "umbrella", "mountain"]
+    original_word = random.choice(words)
+    scrambled_word = scramble_word(original_word)
+    return scrambled_word, original_word
+
+
 def main():
     update_id = None
     print("Bot started...")
@@ -440,6 +458,10 @@ def main():
             if text == "/start":
                 greeting = random.choice(greetings)
                 send_message(chat_id, greeting, message_id)
+                
+            elif text == "/scramble":
+                scrambled, original = word_scramble_game()
+                send_message(chat_id, f"🔤 Unscramble this word: **{scrambled}**", message_id)
 
             elif text == "/fact":
                 fact = get_fun_fact()
