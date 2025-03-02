@@ -30,6 +30,10 @@ OMDB_KEY = os.getenv("OMDB_KEY")  # Get from https://www.omdbapi.com/apikey.aspx
 if not OMDB_KEY:
     print("OMDB_KEY not found. Please set it in .env file.")
 
+DICTIONARY_API_KEY = os.getenv("DICTIONARY_API_KEY") #get from https://rapidapi.com/hub 
+if not DICTIONARY_API_KEY:
+    print("DICTIONARY_API_KEY not found.Please set it in .env file.")
+
 """
 Follow these steps to get your API key:
 
@@ -46,7 +50,7 @@ OPEN_WEATHER_KEY = os.getenv("OPEN_WEATHER_KEY")
 if not OPEN_WEATHER_KEY:
     print("OPEN_WEATHER_KEY not found. Please set it in .env file.")
 
-BASE_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/"
+BASE_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
 NEWS_URL = f"https://newsapi.org/v2/top-headlines?country=us&apiKey={NEWS_API_KEY}"
 
 greetings = ["Hello!", "Hi there!", "Greetings!", "Salutations!", "Howdy!"]
@@ -447,6 +451,14 @@ def get_movie_details(movie_name):
             return "❌ Movie not found! Please check the name and try again."
     return "❌ Unable to fetch movie details at the moment."
 
+# Simulate fetching word meaning from the dictionary API
+def get_meaning(word):
+    # In this case, we're simulating the API call with a random output
+    # Normally, you'd use a proper HTTP request, but here we're using random output
+    if random.choice([True, False]):
+        return f"The meaning of '{word}' is: [random meaning]"
+    else:
+        return "Sorry, I couldn't find the meaning of that word. Make sure you add a proper API key"
 
 def main():
     update_id = None
@@ -577,6 +589,13 @@ def main():
                 mood = random.choice(moods)
                 send_message(chat_id, mood, message_id)
 
+            elif text.lower() == "/search":
+                    send_message(chat_id, "Hi! Please send me a word, and I will tell you its meaning.")
+                    if text.lower() == "/search":
+                        meaning = get_meaning(text)
+                        send_message(chat_id, f"Meaning: {meaning}", reply_to_message_id=message_id)
+            
+
             # Command handling for the bot
             elif text == "/livescore":
                 send_message(chat_id, get_live_score(), message_id)
@@ -594,6 +613,8 @@ def main():
                         "❌ Please enter the city and country in this format:\n<code>/weather Delhi, India</code>",
                         message_id,
                     )
+                
+
 
                 else:
                     try:
