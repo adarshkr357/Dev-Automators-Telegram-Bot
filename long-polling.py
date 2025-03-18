@@ -30,6 +30,16 @@ OMDB_KEY = os.getenv("OMDB_KEY")  # Get from https://www.omdbapi.com/apikey.aspx
 if not OMDB_KEY:
     print("OMDB_KEY not found. Please set it in .env file.")
 
+EXAMS_API_URL = "https://govapi.example.com/exams/upcoming"  # Replace with the government API endpoint
+EXAMS_API_KEY = os.getenv("EXAMS_API_KEY ")# Replace with your API key
+if not EXAMS_API_KEY :
+    print("EXAMS_API_KEY  not found. please set in .env file.")
+
+
+headers = {
+    "Authorization": f"Bearer {EXAMS_API_KEY}"
+}
+
 """
 Follow these steps to get your API key:
 
@@ -448,6 +458,38 @@ def get_movie_details(movie_name):
     return "❌ Unable to fetch movie details at the moment."
 
 
+""" fetches upcoming national exam details based on your provide government site API"""
+def fetch_and_send_exams(chat_id):
+    try:
+        response = requests.get(EXAMS_API_URL, headers=headers, timeout=60)
+        if response.status_code == 200:
+            exams = response.json().get("exams", [])
+            
+            if exams:
+                message = "<b>Upcoming National Exams:</b>\n\n"
+                for i, exam in enumerate(exams, start=1):
+                    exam_name = exam["name"]
+                    exam_date = exam["date"]
+                    exam_details = exam["details"]
+                    gov_link = exam["gov_link"]
+
+                    message += (f"{i}. <b>{exam_name}</b>\n"
+                                f"Date: {exam_date}\n"
+                                f"Details: {exam_details}\n"
+                                f"<a href='{gov_link}'>Official Info</a>\n\n")
+            else:
+                message = "No upcoming national exams at the moment."
+
+            send_message(chat_id, message)
+        else:
+            send_message(chat_id, "Error fetching exams. Please try again later.")
+    
+    except requests.RequestException as e:
+        send_message(chat_id, f"Error: {e}")
+
+
+
+
 def main():
     update_id = None
     print("Bot started...")
@@ -580,6 +622,7 @@ def main():
             # Command handling for the bot
             elif text == "/livescore":
                 send_message(chat_id, get_live_score(), message_id)
+                
 
             elif text.startswith("/weather"):
                 """
@@ -606,6 +649,11 @@ def main():
                             "❌ Invalid format! Please enter as: <code>/weather City, Country</code>\nExample: <code>/weather Delhi, India</code>",
                             message_id,
                         )
+
+            elif text.strip() == "/exam":
+                    send_message(chat_id, "Fetching upcoming exams, please wait...")
+                    fetch_and_send_exams(chat_id)
+                        
 
             else:
                 send_message(chat_id, "Invalid message", message_id)
