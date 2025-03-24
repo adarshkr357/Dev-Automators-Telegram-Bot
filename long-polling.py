@@ -447,33 +447,34 @@ def get_movie_details(movie_name):
             return "❌ Movie not found! Please check the name and try again."
     return "❌ Unable to fetch movie details at the moment."
 
+
 def veg():
-    base_url = "https://www.themealdb.com/api/json/v1/1/random.php" # No API key needed for this free API
+    base_url = "https://www.themealdb.com/api/json/v1/1/random.php"  # No API key needed for this free API
     try:
-        response = requests.get(base_url, timeout=30) # Added timeout to request
+        response = requests.get(base_url, timeout=30)  # Added timeout to request
         response.raise_for_status()
         data = response.json()
     except requests.exceptions.RequestException as e:
         print(f"Error fetching recipe: {e}")
         return None
 
-    if data and data['meals']: #TheMealDB returns 'meals' array
-        meal = data['meals'][0]
+    if data and data["meals"]:  # TheMealDB returns 'meals' array
+        meal = data["meals"][0]
         recipe = {
-            "title": meal['strMeal'],
+            "title": meal["strMeal"],
             "ingredients": [],
-            "instructions": meal['strInstructions'],
-            "sourceUrl": meal['strSource'],
-            "image": meal['strMealThumb']
+            "instructions": meal["strInstructions"],
+            "sourceUrl": meal["strSource"],
+            "image": meal["strMealThumb"],
         }
 
-
         for i in range(1, 21):
-            ingredient = meal[f'strIngredient{i}']
-            measure = meal[f'strMeasure{i}']
+            ingredient = meal[f"strIngredient{i}"]
+            measure = meal[f"strMeasure{i}"]
             if ingredient and ingredient.strip():
-                recipe["ingredients"].append(f"- {measure} {ingredient}") # Added bullet point for ingredient list
-
+                recipe["ingredients"].append(
+                    f"- {measure} {ingredient}"
+                )  # Added bullet point for ingredient list
 
         return recipe
     else:
@@ -638,7 +639,7 @@ def main():
                             "❌ Invalid format! Please enter as: <code>/weather City, Country</code>\nExample: <code>/weather Delhi, India</code>",
                             message_id,
                         )
-            elif(text in ("/recipe")):
+            elif text in ("/recipe"):
                 recipe_data = veg()
                 if recipe_data:
                     recipe_text = f"""
@@ -652,15 +653,18 @@ def main():
 
 [Source]({recipe_data['sourceUrl']})
 [Recipe Image]({recipe_data['image']})
-                    """ 
+                    """
                     send_message(chat_id=chat_id, text=recipe_text)
                 else:
-                    send_message(chat_id=chat_id, text="Sorry, I couldn't find a vegetarian recipe right now. Please try again later.")
-            
+                    send_message(
+                        chat_id=chat_id,
+                        text="Sorry, I couldn't find a vegetarian recipe right now. Please try again later.",
+                    )
+
             else:
                 send_message(chat_id, "Invalid message", message_id)
 
-        time.sleep(0.5) 
+        time.sleep(0.5)
 
 
 if __name__ == "__main__":
